@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>終極版曝險雷達 (V16.19 旗艦光影版)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ==========================================================================
+           🌌 賽博龐克 / 科技深色模式 (Cyberpunk Tech Dark Mode)
+           ========================================================================== */
+        :root {
+            --bg-body: #0a0f1d;          
+            --card-bg: rgba(30, 41, 59, 0.65); 
+            --card-shadow: rgba(0, 0, 0, 0.4);
+            --text-main: #f8fafc;        
+            --text-sub: #94a3b8;         
+            --border-color: rgba(51, 65, 85, 0.6); 
+            --input-bg: rgba(15, 23, 42, 0.8);         
+            
+            --accent-blue: #38bdf8;      
+            --accent-green: #34d399;     
+            --accent-orange: #fbbf24;    
+            --accent-red: #f87171;       
+            --accent-purple: #c084fc;    
+            --accent-pink: #ec4899;      
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        
+        body { 
+            background-color: var(--bg-body); 
+            background-image: 
+                radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 40%), 
+                radial-gradient(circle at 85% 100%, rgba(192, 132, 252, 0.06) 0%, transparent 40%);
+            background-attachment: fixed;
+            color: var(--text-main); 
+            padding-bottom: 90px; 
+            transition: background-color 0.3s; 
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; transition: 0.3s; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+        .app-container { max-width: 480px; margin: 0 auto; display: block; transition: max-width 0.3s ease; }
+        
+        body.sandbox-mode { --border-color: rgba(192, 132, 252, 0.5); --card-shadow: rgba(192, 132, 252, 0.2); background-color: #1a1025; }
+        body.sandbox-mode .card { border: 1px dashed var(--accent-purple); box-shadow: 0 0 20px rgba(192, 132, 252, 0.15); }
+        .sandbox-banner { display: none; position: sticky; top: 0; z-index: 999; background: linear-gradient(90deg, rgba(147, 51, 234, 0.95), rgba(192, 132, 252, 0.95)); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #fff; padding: 12px 15px; justify-content: space-between; align-items: center; font-weight: 800; border-bottom: 2px solid #e9d5ff; font-size: 14px; box-shadow: 0 4px 15px rgba(147, 51, 234, 0.5); animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        .sandbox-btn { background: #fff; color: var(--accent-purple); border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; margin-left: 8px; font-size:13px; transition:0.2s; }
+        .sandbox-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .sandbox-btn:active { transform: scale(0.95); }
+        .sandbox-btn-discard { background: rgba(0,0,0,0.2); border: 1px solid #fff; color: #fff; }
+        .sandbox-btn-discard:hover { background: rgba(255,255,255,0.1); }
+
+        body.war-room-mode { padding-bottom: 20px; }
+        body.war-room-mode .app-container { max-width: 800px; padding: 0 10px; } 
+        body.war-room-mode .hide-in-war-room { display: none !important; }
+        body.war-room-mode .card { margin-bottom: 15px; }
+        body.war-room-mode .nav-wrapper { display: none; }
+        body.war-room-mode .footer { display: none; }
+        body.war-room-mode #tab-overview, body.war-room-mode #tab-tactics, body.war-room-mode #tab-settings { display: block; animation: none; padding:0; } 
+        body.war-room-mode .war-room-grid { display: grid; gap: 15px; grid-template-columns: 1fr; }
+        @media (min-width: 768px) {
+            body.war-room-mode .war-room-grid { grid-template-columns: 1fr 1fr; }
+            body.war-room-mode .war-room-full-width { grid-column: 1 / -1; }
+        }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 2000; display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+        .modal-content { background: #1e293b; border: 1px solid var(--accent-blue); box-shadow: 0 0 30px rgba(56, 189, 248, 0.15); width: 90%; max-width: 400px; border-radius: 16px; padding: 20px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        @keyframes float { 0% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-8px) rotate(2deg); } 100% { transform: translateY(0px) rotate(0deg); } }
+        
+        .fleet-box { text-align: center; padding: 20px; margin: 20px 0 10px 0; border-radius: 16px; background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.3) 100%); border: 1px dashed rgba(255,255,255,0.1); transition: all 0.5s ease; position: relative; overflow: hidden; }
+
+        @keyframes pulse-red { 0% { box-shadow: 0 0 10px rgba(248,113,113,0.2); border-color: rgba(248,113,113,0.4); } 50% { box-shadow: 0 0 25px rgba(248,113,113,0.6); border-color: rgba(248,113,113,0.8); } 100% { box-shadow: 0 0 10px rgba(248,113,113,0.2); border-color: rgba(248,113,113,0.4); } }
+        @keyframes pulse-orange { 0% { box-shadow: 0 0 10px rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.2); } 50% { box-shadow: 0 0 20px rgba(251,191,36,0.4); border-color: rgba(251,191,36,0.5); } 100% { box-shadow: 0 0 10px rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.2); } }
+        
+        body.defcon-1 .glow-card { animation: pulse-red 2.5s infinite; }
+        body.defcon-3 .glow-card { animation: pulse-orange 3.5s infinite; }
+
+        .underwater-box { background: linear-gradient(135deg, rgba(15,23,42,0.9) 0%, rgba(30,58,138,0.9) 100%); backdrop-filter: blur(8px); border: 1px solid #3b82f6; border-radius: 12px; padding: 15px; margin-top: 15px; color: #93c5fd; position: relative; overflow: hidden; display: none; }
+        .underwater-box::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:#38bdf8; box-shadow: 0 0 10px #38bdf8; }
+        .water-bubble { position: absolute; background: rgba(56, 189, 248, 0.3); border-radius: 50%; animation: floatUp 4s infinite ease-in; }
+        @keyframes floatUp { 0% { bottom: -10px; transform: translateX(0); opacity: 1; } 100% { bottom: 100%; transform: translateX(-20px); opacity: 0; } }
+
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 15px 10px 15px; color: var(--accent-blue); font-size: 15px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4); flex-wrap: wrap; gap: 10px;}
+        .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        .nav-wrapper { position: sticky; top: 0; z-index: 100; background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); overflow-x: auto; white-space: nowrap; padding: 10px 15px; -webkit-overflow-scrolling: touch; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
+        .nav-wrapper::-webkit-scrollbar { display: none; }
+        .nav-tabs { display: flex; gap: 10px; }
+        .nav-tab { padding: 10px 18px; border-radius: 24px; font-size: 14px; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background-color: var(--input-bg); border: 1px solid var(--border-color); display: inline-flex; align-items: center; }
+        .nav-tab:hover { background-color: rgba(255,255,255,0.05); color: var(--text-main); transform: translateY(-1px); }
+        .nav-tab.active { background-color: rgba(56, 189, 248, 0.1); color: var(--accent-blue); box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.5);}
+        .nav-tab i { margin-right: 6px; font-size: 13px; }
+
+        .tab-content { display: none; padding: 0 15px; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { 
+            background-color: var(--card-bg); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px; 
+            padding: 22px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 8px 30px var(--card-shadow); 
+            border: 1px solid var(--border-color);
+            transition: box-shadow 0.3s ease;
+        }
+        .card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.8); }
+        
+        .exposure-display { text-align: center; padding: 5px 0 15px 0; position: relative;}
+        .exposure-title { font-size: 14px; color: var(--text-sub); font-weight: 700; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase;}
+        .status-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 13px; margin-top: 8px; font-weight: 800; border: 1px solid transparent;}
+        .exposure-num { font-size: 56px; font-weight: 900; color: var(--text-main); letter-spacing: -1px; margin-top: 2px; text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);}
+        
+        .summary-table { width: 100%; margin-top: 10px; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px dashed rgba(255,255,255,0.05);}
+        .summary-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .summary-cell.label { color: var(--text-sub); font-weight: 600; font-size: 14px;}
+        .summary-cell.val { text-align: right; font-weight: 800; color: var(--text-main); font-size: 16px;}
+        
+        .chart-box { height: 240px; position: relative; margin: 15px 0; }
+        .sub-chart-box { height: 240px; position: relative; margin-top: 15px; padding-top: 15px; }
+        
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .section-title { font-size: 16px; color: var(--text-main); font-weight: 800; display: flex; align-items: center; letter-spacing: 0.5px;}
+        .section-title::before { content: ''; display: inline-block; width: 4px; height: 16px; background-color: var(--accent-blue); margin-right: 8px; border-radius: 2px; box-shadow: 0 0 8px var(--accent-blue);}
+        
+        .btn-add { background-color: rgba(56, 189, 248, 0.15); color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.3); padding: 8px 14px; border-radius: 10px; font-size: 13px; cursor: pointer; font-weight: 700; transition: all 0.2s;}
+        .btn-add:hover { background-color: rgba(56, 189, 248, 0.25); color: #fff; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+        .btn-add:active { transform: scale(0.95); }
+        
+        .btn-action { background-color: var(--accent-blue); color: #0f172a; border: none; padding: 14px 16px; border-radius: 14px; font-size: 15px; cursor: pointer; font-weight: 800; width: 100%; margin-top: 10px; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);}
+        .btn-action:hover { filter: brightness(1.1); box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); transform: translateY(-2px); }
+        .btn-action:active { transform: scale(0.98) translateY(0); box-shadow: 0 0 5px rgba(56, 189, 248, 0.3); }
+        .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none;}
+        
+        .form-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .form-label { font-size: 14px; color: var(--text-sub); font-weight: 600;}
+        .form-input { background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 12px; color: var(--text-main); text-align: right; outline: none; width: 140px; font-weight: 700; font-size: 15px; transition: all 0.3s;}
+        .form-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); background-color: rgba(15, 23, 42, 0.95); }
+        .form-input[readonly] { background-color: rgba(255,255,255,0.02); color: var(--text-sub); border-color: transparent; }
+
+        .inventory-card { background-color: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 15px; margin-bottom: 12px; transition: all 0.3s; }
+        .inventory-card:focus-within, .inventory-card:hover { border-color: rgba(56, 189, 248, 0.3); background-color: rgba(255,255,255,0.04); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        
+        .inv-header { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+        .inv-input-text { flex: 1; background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 8px; color: var(--text-main); font-size: 13px; outline: none; width: 100%; font-weight: 500; transition:0.3s;}
+        .inv-input-text:focus { border-color: var(--accent-blue); }
+        .inv-input-code { width: 70px; background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 8px; color: var(--text-main); font-size: 13px; text-transform: uppercase; outline: none; text-align: center; font-weight: 700; transition:0.3s;}
+        .inv-input-code:focus { border-color: var(--accent-blue); }
+        .inv-select { background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px; color: var(--text-main); font-size: 13px; outline: none; font-weight: 600; cursor: pointer; transition:0.3s;}
+        .inv-select:hover { border-color: rgba(255,255,255,0.3); }
+        
+        .btn-delete { background-color: rgba(248, 113, 113, 0.1); color: var(--accent-red); border: 1px solid rgba(248, 113, 113, 0.2); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;}
+        .btn-delete:hover { background-color: rgba(248, 113, 113, 0.2); border-color: rgba(248, 113, 113, 0.5); }
+        .btn-delete:active { transform: scale(0.9); }
+        
+        .btn-collateral { background-color: transparent; color: var(--text-sub); border: 1px solid var(--border-color); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+        .btn-collateral:hover { background-color: rgba(255,255,255,0.05); color: #fff; }
+        .btn-collateral.active { background-color: rgba(52, 211, 153, 0.15); color: var(--accent-green); border-color: var(--accent-green); box-shadow: 0 0 10px rgba(52, 211, 153, 0.2); }
+
+        .inv-calc { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-sub); flex-wrap: wrap; }
+        .inv-input-num { background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 8px; color: var(--text-main); font-size: 13px; outline: none; text-align: right; width: 85px; font-weight: 600; transition:0.3s;}
+        .inv-input-num:focus { border-color: var(--accent-blue); }
+        .inv-value { flex: 1 1 100%; text-align: right; font-weight: 800; color: var(--accent-blue); font-size: 16px; margin-top: 6px;}
+        
+        .api-status { text-align: right; font-size: 12px; color: var(--text-sub); margin-top: -5px; margin-bottom: 15px; display: flex; justify-content: flex-end; align-items: center; gap: 8px; font-weight: 600;}
+        .btn-refresh { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: var(--accent-blue); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; font-weight: 700; transition:0.2s;}
+        .btn-refresh:hover { background: rgba(56, 189, 248, 0.2); color: #fff; }
+        
+        .sim-box { background-color: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-top: 15px; }
+        .slider-container { width: 100%; margin: 15px 0; display: flex; align-items: center; gap: 10px; }
+        .slider { -webkit-appearance: none; flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); outline: none; transition: 0.3s; }
+        .slider:hover { background: rgba(255,255,255,0.2); }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-blue); cursor: pointer; box-shadow: 0 0 10px var(--accent-blue); border: 2px solid var(--bg-body); transition: transform 0.1s;}
+        .slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        .slider-stress::-webkit-slider-thumb { background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red);}
+        .slider-purple::-webkit-slider-thumb { background: var(--accent-purple); box-shadow: 0 0 10px var(--accent-purple);}
+        
+        .slider-toggle:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: var(--text-main); transition: .4s; border-radius: 50%; }
+        input:checked + .slider-toggle { background-color: var(--accent-purple); box-shadow: 0 0 10px var(--accent-purple); border-color:transparent !important;}
+        input:checked + .slider-toggle:before { transform: translateX(20px); }
+
+        .stress-result { display: flex; justify-content: space-between; background: rgba(248, 113, 113, 0.05); padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px dashed rgba(248, 113, 113, 0.3); }
+        .stress-item { text-align: center; width: 50%; }
+        .stress-item.left { border-right: 1px dashed rgba(248, 113, 113, 0.3); }
+
+        .shield-toggle-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-sub); padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 4px;}
+        .shield-toggle-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
+        .shield-toggle-btn.active { background: rgba(52, 211, 153, 0.15); border-color: var(--accent-green); color: var(--accent-green); box-shadow: 0 0 15px rgba(52, 211, 153, 0.2); }
+        
+        body.blind-mode .blur-target { filter: blur(8px); opacity: 0.5; user-select: none; pointer-events: none; transition: all 0.4s ease; }
+        body.blind-mode .blur-target-chart { filter: blur(12px) grayscale(1); opacity: 0.3; transition: all 0.4s ease; }
+        
+        .milestone-container { margin-top: 15px; }
+        .progress-bar-bg { width: 100%; height: 12px; background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 20px; margin: 10px 0; overflow: hidden; position: relative; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-purple) 100%); border-radius: 20px; width: 0%; transition: width 0.5s ease-out; box-shadow: 0 0 10px var(--accent-purple);}
+        .milestone-badge { font-size: 12px; font-weight: 800; color: #fff; background-color: var(--accent-purple); padding: 3px 8px; border-radius: 12px; box-shadow: 0 0 8px var(--accent-purple); }
+
+        .vs-bar-container { background-color: var(--input-bg); height: 10px; border-radius: 5px; overflow: hidden; display: flex; margin: 12px 0 6px 0; border: 1px solid var(--border-color); }
+        .vs-bar-cash { background-color: var(--accent-green); height: 100%; transition: width 0.4s ease; box-shadow: inset 0 0 5px rgba(0,0,0,0.5);}
+        .vs-bar-inv { background-color: var(--accent-blue); height: 100%; transition: width 0.4s ease; box-shadow: inset 0 0 5px rgba(0,0,0,0.5);}
+
+        .vs-card-hover { cursor: crosshair; transition: all 0.3s; }
+        .vs-card-hover:hover { background-color: rgba(255,255,255,0.06) !important; border-color: rgba(56, 189, 248, 0.4) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .vs-val-amt { display: none; }
+        .vs-card-hover:hover .vs-val-pct { display: none; }
+        .vs-card-hover:hover .vs-val-amt { display: inline; animation: fadeIn 0.2s ease; }
+
+        .scanlines { position: relative; overflow: hidden; }
+        .scanlines::after { content: ""; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(56, 189, 248, 0.05) 50%); background-size: 100% 6px; z-index: 5; pointer-events: none; opacity: 0.6; }
+        .scanlines::before { content: ""; display: block; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: rgba(56, 189, 248, 0.4); box-shadow: 0 0 20px rgba(56, 189, 248, 0.8); animation: scanlineAnim 4s linear infinite; z-index: 6; pointer-events: none; opacity: 0.5; }
+        @keyframes scanlineAnim { 0% { top: -20px; } 100% { top: 100%; } }
+
+        /* 🎛️ 自訂化全息指揮艙專屬 CSS 🎛️ */
+        .widget-controls { display:flex; gap:12px; align-items:center; }
+        .pin-btn { cursor:pointer; color:var(--text-sub); transition:0.3s; font-size:14px; }
+        .pin-btn:hover { color:var(--accent-blue); text-shadow: 0 0 8px rgba(56, 189, 248, 0.5); }
+        .pin-btn.active { color:var(--accent-blue); transform: rotate(-45deg); text-shadow: 0 0 8px rgba(56, 189, 248, 0.8); }
+        
+        .drag-handle { cursor:grab; color:var(--text-sub); transition:0.3s; font-size:14px; padding: 0 4px; opacity: 0.5;}
+        .drag-handle:hover { color:var(--text-main); opacity: 1;}
+        .drag-handle:active { cursor:grabbing; }
+        
+        /* 🌟 UI升級: 釘選面板雷射邊框特效 🌟 */
+        .widget-pinned { 
+            position: relative; 
+            overflow: hidden; 
+            border: 1px solid transparent !important; 
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.15) !important; 
+            transform: scale(1.01); 
+            z-index: 10;
+        }
+        /* 旋轉雷射背景 */
+        .widget-pinned::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(transparent, rgba(56, 189, 248, 0.1), var(--accent-blue), transparent 40%);
+            animation: laser-spin 3s linear infinite;
+            z-index: 0;
+        }
+        /* 內部挖空遮罩，露出邊框 */
+        .widget-pinned::after {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 19px;
+            z-index: 1;
+        }
+        /* 確保卡片內部的所有元素都在背景和雷射遮罩的上方 */
+        .widget-pinned > * { position: relative; z-index: 2; }
+        
+        /* PINNED 標籤嵌入標題旁 */
+        .widget-pinned .section-title::after {
+            content: 'PINNED';
+            margin-left: 10px;
+            background: var(--bg-body);
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+            letter-spacing: 1px;
+            vertical-align: middle;
+        }
+        @keyframes laser-spin { 100% { transform: rotate(360deg); } }
+        
+        .sortable-ghost { opacity: 0.4; transform: scale(0.95); border: 1px dashed var(--accent-blue) !important; }
+
+        .snapshot-item { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; margin-bottom: 10px; animation: fadeIn 0.3s ease; transition:0.3s;}
+        .snapshot-item:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
+        .snapshot-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 8px; }
+        
+        .diff-up { color: var(--accent-green); font-weight: 800; font-size: 14px; background: rgba(52, 211, 153, 0.1); padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(52, 211, 153, 0.2); }
+        .diff-down { color: var(--accent-red); font-weight: 800; font-size: 14px; background: rgba(248, 113, 113, 0.1); padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(248, 113, 113, 0.2); }
+        .diff-flat { color: var(--text-sub); font-weight: 700; font-size: 13px; background: rgba(148, 163, 184, 0.1); padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(148, 163, 184, 0.2); }
+        
+        .quote-card { background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(56, 189, 248, 0.02) 100%); border-left: 4px solid var(--accent-blue); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        .quote-text { font-size: 15px; font-weight: 600; line-height: 1.6; color: var(--accent-blue); position: relative; }
+        .note-input-box { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .note-textarea { width: 100%; height: 90px; background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px; font-size: 14px; color: var(--text-main); outline: none; resize: none; font-weight: 500; transition: all 0.3s; }
+        .note-textarea:focus { border-color: var(--accent-blue); box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); background-color: rgba(15,23,42,0.9); }
+        .note-item { background-color: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; animation: fadeIn 0.3s ease; transition:0.3s;}
+        .note-item:hover { border-color: var(--accent-blue); background: rgba(56, 189, 248, 0.02); }
+        .note-content-text { font-size: 14px; line-height: 1.6; font-weight: 400; white-space: pre-wrap; color: var(--text-main); }
+        
+        .terminal-box { background: linear-gradient(180deg, rgba(2,6,23,0.9) 0%, rgba(15,23,42,0.9) 100%); backdrop-filter: blur(5px); border: 1px solid var(--accent-blue); border-radius: 12px; padding: 16px; margin-top: 15px; position: relative; overflow: hidden;}
+        .terminal-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent-blue); box-shadow: 0 0 10px var(--accent-blue); }
+        .terminal-header { font-size: 11px; color: var(--accent-blue); font-family: monospace; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .terminal-cmd { font-size: 16px; color: #fff; font-weight: 600; letter-spacing: 0.5px; }
+
+        .chronos-box { background: rgba(0,0,0,0.4); border: 1px dashed rgba(192, 132, 252, 0.5); border-radius: 12px; padding: 15px; margin-top: 15px; text-align: center; position: relative; overflow: hidden; box-shadow: inset 0 0 20px rgba(192, 132, 252, 0.05);}
+        .chronos-box::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent-purple), transparent); animation: scanline 3s linear infinite; }
+        .chronos-title { font-size: 11px; color: var(--accent-purple); font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .chronos-time { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 0 20px rgba(192,132,252,0.8); display: flex; align-items: baseline; justify-content: center; gap: 8px; flex-wrap: wrap;}
+        .chronos-unit { font-size: 14px; color: var(--text-sub); font-weight: 700; text-shadow: none; }
+        .chronos-alert { font-size: 14px; color: var(--accent-red); font-weight: 700; text-shadow: 0 0 10px rgba(248,113,113,0.5); }
+        
+        .footer { text-align: center; font-size: 12px; color: var(--text-sub); margin-top: 20px; line-height: 1.6; padding-bottom: 20px;}
+        
+        .ticker-wrap { width: 100%; overflow: hidden; background-color: rgba(15, 23, 42, 0.9); border-bottom: 1px solid var(--border-color); padding: 8px 0; display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.5); position: relative; z-index: 10;}
+        body.war-room-mode .ticker-wrap { display: block; }
+        .ticker-content { display: inline-block; white-space: nowrap; padding-left: 100%; animation: ticker 30s linear infinite; font-size: 13px; font-weight: 700; color: var(--accent-blue); text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); letter-spacing: 1px; }
+
+        .quest-card { background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; margin-bottom: 10px; position: relative; overflow: hidden; transition: all 0.3s; display: flex; flex-direction: column; gap: 6px; }
+        .quest-card:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+        .quest-card.completed { border-color: var(--accent-green); background: rgba(52, 211, 153, 0.08); }
+        .quest-card.completed:hover { box-shadow: 0 0 15px rgba(52,211,153,0.15); }
+        .quest-title { font-size: 13px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; }
+        .quest-desc { font-size: 11px; color: var(--text-sub); }
+        
+        .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .badge-item { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 10px 5px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; transition: 0.5s; filter: grayscale(100%); opacity: 0.4; }
+        .badge-item.unlocked { filter: grayscale(0%); opacity: 1; background: rgba(251, 191, 36, 0.05); border-color: rgba(251, 191, 36, 0.4); transform: scale(1.02); box-shadow: 0 0 15px rgba(251,191,36,0.15); }
+        .badge-icon { font-size: 24px; text-shadow: 0 0 10px rgba(255,255,255,0.3); transition: 0.3s; }
+        .badge-item.unlocked:hover .badge-icon { transform: scale(1.2) rotate(5deg); }
+        .badge-item-title { font-size: 11px; font-weight: 800; color: var(--text-sub); line-height: 1.2; }
+        .badge-item.unlocked .badge-item-title { color: var(--accent-orange); text-shadow: 0 0 5px rgba(251,191,36,0.3); }
+
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; }
+
+        /* 🛸 懸浮戰略核心 (FAB) 🛸 */
+        .fab-container { position: fixed; bottom: 80px; right: 20px; z-index: 9999; display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 12px; }
+        .fab-main { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); border: none; box-shadow: 0 0 20px rgba(192, 132, 252, 0.6); color: #fff; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10000; }
+        .fab-main:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(192, 132, 252, 0.8); }
+        .fab-main:active { transform: scale(0.95); }
+        .fab-main i { transition: transform 0.4s ease; }
+        .fab-container.active .fab-main i { transform: rotate(135deg); }
+        
+        .fab-menu { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .fab-container.active .fab-menu { opacity: 1; pointer-events: auto; transform: translateY(0); }
+        
+        .fab-item { display: flex; align-items: center; gap: 10px; background: transparent; border: none; cursor: pointer; color: var(--text-main); font-weight: 700; font-size: 14px; transform: translateX(10px); transition: transform 0.3s ease, color 0.2s; }
+        .fab-container.active .fab-menu .fab-item { transform: translateX(0); }
+        .fab-item:nth-child(1) { transition-delay: 0.05s; }
+        .fab-item:nth-child(2) { transition-delay: 0.1s; }
+        .fab-item:nth-child(3) { transition-delay: 0.15s; }
+        .fab-item:nth-child(4) { transition-delay: 0.2s; }
+        .fab-item:hover { color: var(--accent-blue); }
+        
+        .fab-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--input-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--accent-blue); box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.3s; }
+        .fab-item:hover .fab-icon { border-color: var(--accent-blue); background: rgba(56, 189, 248, 0.1); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); transform: scale(1.1); }
+        .fab-label { background: rgba(15, 23, 42, 0.9); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-shadow: none; white-space: nowrap; }
+
+        /* ==========================================================================
+           📱 行動端專屬：底部全息導航列 (Bottom Tab Bar)
+           ========================================================================== */
+        .bottom-nav {
+            display: none; /* 預設在桌面端隱藏 */
+        }
+
+        @media (max-width: 768px) {
+            /* 隱藏原本的頂部導航 */
+            .nav-wrapper {
+                display: none !important;
+            }
+            
+            /* 增加主體底部留白，避免被導航列與 FAB 遮擋 */
+            body {
+                padding-bottom: 150px !important; 
+            }
+
+            /* 顯示底部導航 */
+            .bottom-nav {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background-color: rgba(15, 23, 42, 0.85);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border-top: 1px solid var(--border-color);
+                z-index: 9998;
+                /* 適配 iPhone 底部橫條，避免按鈕被裁切 */
+                padding: 8px 5px calc(8px + env(safe-area-inset-bottom)) 5px; 
+                justify-content: space-around;
+                align-items: center;
+                box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.6);
+                transition: transform 0.3s ease;
+            }
+
+            /* 戰情室模式下自動隱藏底部導航 */
+            body.war-room-mode .bottom-nav {
+                display: none;
+            }
+
+            /* 底部導航按鈕樣式 */
+            .bottom-nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                color: var(--text-sub);
+                font-size: 10px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                flex: 1;
+                border-radius: 12px;
+                -webkit-tap-highlight-color: transparent; /* 移除手機點擊閃爍 */
+            }
+
+            .bottom-nav-item i {
+                font-size: 18px;
+                margin-bottom: 2px;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            /* 點擊與啟動的發光狀態 */
+            .bottom-nav-item.active {
+                color: var(--accent-blue);
+                text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+            }
+            
+            .bottom-nav-item.active i {
+                transform: translateY(-3px) scale(1.15); /* 啟動時圖示微幅放大並上浮 */
+                color: var(--accent-blue);
+            }
+
+            /* 將懸浮戰略核心 (FAB) 往上挪，避免與 Bottom Nav 重疊 */
+            .fab-container {
+                bottom: calc(75px + env(safe-area-inset-bottom)) !important; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="sandbox-banner" id="ui-sandbox-banner">
+    <div><i class="fa-solid fa-flask" style="margin-right:6px;"></i>平行沙盤推演中... (修改不會寫入真實硬碟)</div>
+    <div style="display:flex;">
+        <button class="sandbox-btn sandbox-btn-discard" onclick="discardSandbox()"><i class="fa-solid fa-arrow-rotate-left" style="margin-right:4px;"></i>捨棄返回</button>
+        <button class="sandbox-btn" onclick="applySandbox()"><i class="fa-solid fa-check-double" style="margin-right:4px;"></i>套用至真實</button>
+    </div>
+</div>
+
+<div class="app-container">
+    <div class="header">
+        <div>📈 終極曝險雷達 <span style="font-size:11px; color:var(--text-sub); font-weight: 600;">(V16.19 旗艦光影版)</span></div>
+        <div class="header-actions">
+            <button id="btn-sandbox" class="shield-toggle-btn" style="color:var(--accent-purple); border-color:var(--accent-purple);" onclick="toggleSandbox()"><i class="fa-solid fa-flask"></i> 平行沙盤</button>
+            <button id="btn-war-room" class="shield-toggle-btn" style="color:#38bdf8; border-color:#38bdf8;" onclick="toggleWarRoom()"><i class="fa-solid fa-desktop"></i> 戰情室</button>
+            <button id="btn-blind-shield" class="shield-toggle-btn" onclick="toggleBlindMode()"><i class="fa-solid fa-eye-slash"></i> 盲視</button>
+        </div>
+    </div>
+
+    <div class="ticker-wrap" id="ui-ticker-wrap">
+        <div class="ticker-content" id="ui-ticker-text">系統連線中... 準備接收市場數據與戰情指令...</div>
+    </div>
+
+    <div style="padding: 0 15px;" class="war-room-full-width">
+        <div class="card glow-card scanlines" style="margin-bottom: 12px; border-bottom: 4px solid var(--accent-blue); background: linear-gradient(180deg, var(--card-bg) 0%, rgba(15,23,42,0.8) 100%); position: relative;">
+            
+            <div id="ui-defcon-badge" style="position: absolute; top: 15px; left: 15px; font-size: 11px; font-weight: 800; letter-spacing: 1px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--accent-green); color: var(--accent-green); background: rgba(52,211,153,0.1); box-shadow: 0 0 10px rgba(52,211,153,0.2); z-index: 10;">
+                <i class="fa-solid fa-shield-check"></i> DEFCON 5
+            </div>
+
+            <div class="exposure-display" style="padding-top: 25px; position:relative; z-index: 10;">
+                <div class="exposure-title">當前戰術曝險比率</div>
+                <div class="exposure-num blur-target" id="ui-exposure-ratio" data-val="0">0.00%</div>
+                <div class="status-badge" id="ui-status-badge">系統計算中...</div>
+            </div>
+
+            <div id="fleet-container" class="fleet-box" style="position:relative; z-index: 10;">
+                <div style="font-size: 13px; color: var(--text-sub); font-weight: 800; margin-bottom: 15px; letter-spacing: 1px;"><i class="fa-solid fa-trophy" style="color:var(--accent-orange); margin-right:4px;"></i> 星際艦隊階級</div>
+                <div id="fleet-icon" style="font-size: 60px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); animation: float 3s ease-in-out infinite; margin-bottom: 5px;">🛶</div>
+                <div id="fleet-name" style="font-size: 26px; font-weight: 900; color: #94a3b8; margin-bottom: 18px; letter-spacing: 1px;">沿岸木筏</div>
+                <div id="fleet-progress-bg" class="progress-bar-bg" style="height: 10px; background: rgba(255,255,255,0.05); border: none; margin: 0 auto; width: 90%;">
+                    <div id="fleet-progress" class="progress-bar-fill" style="background: #94a3b8; box-shadow: 0 0 10px #94a3b8; width: 0%;"></div>
+                </div>
+                <div id="fleet-next-req" style="font-size: 12px; color: var(--text-sub); margin-top: 12px; font-weight: 600;">距離升級 [<span id="fleet-next-name" style="color:#34d399;">武裝快艇</span>] 尚需: $<span id="ui-fleet-shortfall" data-val="0">...</span></div>
+            </div>
+            
+            <div id="ui-underwater-tracker" style="position:relative; z-index: 10;"></div>
+
+            <div style="height: 1px; background-color: rgba(255,255,255,0.1); margin: 15px 0; position:relative; z-index: 10;"></div>
+            <div class="summary-table" style="position:relative; z-index: 10;">
+                <div class="summary-row hide-in-war-room">
+                    <div class="summary-cell label">投資總市值</div>
+                    <div class="summary-cell val blur-target" id="ui-total-inv" data-val="0">$0</div>
+                </div>
+                <div class="summary-row hide-in-war-room">
+                    <div class="summary-cell label">股市總曝險額</div>
+                    <div class="summary-cell val blur-target" id="ui-total-exp" data-val="0">$0</div>
+                </div>
+                <div class="summary-row" style="padding-top: 6px; padding-bottom: 6px;">
+                    <div class="summary-cell label">當前總負債比 <span style="font-size: 11px; color: var(--text-sub); font-weight: 500;">(總負債/總資產)</span></div>
+                    <div class="summary-cell val blur-target" id="ui-debt-ratio" style="color:var(--accent-orange);">0.0%</div>
+                </div>
+                <div class="summary-row" style="padding-top: 6px; padding-bottom: 6px;">
+                    <div class="summary-cell label">當前流動比 <span style="font-size: 11px; color: var(--text-sub); font-weight: 500;">(流動資產/流動負債)</span></div>
+                    <div class="summary-cell val blur-target" id="ui-current-ratio" style="color:var(--accent-green);">0.00</div>
+                </div>
+                <div class="summary-row" style="margin-top: 8px;">
+                    <div class="summary-cell label" style="color:var(--text-main); font-weight:700;">自有淨資產 (分母)</div>
+                    <div class="summary-cell val blur-target" id="ui-net-worth" data-val="0" style="font-size:20px; color:var(--accent-blue); font-weight:900; text-shadow: 0 0 15px rgba(56,189,248,0.4);">$0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-wrapper">
+        <div class="nav-tabs" id="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('tab-notes')"><i class="fa-solid fa-book-open"></i>學習筆記</div>
+            <div class="nav-tab" onclick="showTab('tab-overview')"><i class="fa-solid fa-satellite-dish"></i>雷達陣列</div>
+            <div class="nav-tab" onclick="showTab('tab-details')"><i class="fa-solid fa-building-columns"></i>資金核心</div>
+            <div class="nav-tab" onclick="showTab('tab-cashflow')"><i class="fa-solid fa-money-bill-transfer"></i>現金流量</div>
+            <div class="nav-tab" onclick="showTab('tab-tactics')"><i class="fa-solid fa-crosshairs"></i>戰術中樞</div>
+            <div class="nav-tab" onclick="showTab('tab-risk')"><i class="fa-solid fa-shield-virus"></i>黑天鵝防禦</div>
+            <div class="nav-tab" onclick="showTab('tab-settings')"><i class="fa-solid fa-cloud-arrow-up"></i>雲端日誌</div>
+        </div>
+    </div>
+
+    <div class="war-room-grid" id="war-room-container">
+
+        <!-- 學習筆記 -->
+        <div id="tab-notes" class="tab-content active hide-in-war-room">
+            <div class="quote-card">
+                <div class="quote-text"><i class="fa-solid fa-quote-left" style="opacity: 0.2; font-size: 24px; position: absolute; top: -10px; left: -10px;"></i>認知決定了你能賺到多少錢，所以，要不停學習增加認知。</div>
+            </div>
+            <div class="card">
+                <div class="section-title">新增市場認知 / 紀律備忘</div>
+                <div class="note-input-box" style="margin-top:12px;">
+                    <textarea class="note-textarea" id="note-input" placeholder="輸入新的市場認知、心法或操作紀律覆盤..."></textarea>
+                    <button class="btn-action" onclick="addNote()"><i class="fa-solid fa-pen-to-square" style="margin-right:6px;"></i>將認知寫入神經元</button>
+                </div>
+            </div>
+            <div id="notes-list-container"></div>
+        </div>
+
+        <!-- 雷達陣列 -->
+        <div id="tab-overview" class="tab-content">
+            <div class="card blur-target vs-card-hover" style="padding: 18px 22px; background: rgba(255,255,255,0.03);" title="滑鼠懸停顯示實際金額">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:700;">
+                    <span style="color:var(--accent-green);">
+                        <i class="fa-solid fa-shield-halved" style="margin-right:4px;"></i>防禦裝甲 
+                        <span id="ui-bar-cash-pct" class="vs-val-pct" data-val="0" style="font-size:15px; font-weight:900;">0%</span>
+                        <span id="ui-bar-cash-amt" class="vs-val-amt" data-val="0" style="font-size:15px; font-weight:900;">$0</span>
+                    </span>
+                    <span style="color:var(--accent-blue);">
+                        <i class="fa-solid fa-rocket" style="margin-right:4px;"></i>攻擊火炮 
+                        <span id="ui-bar-inv-pct" class="vs-val-pct" data-val="0" style="font-size:15px; font-weight:900;">0%</span>
+                        <span id="ui-bar-inv-amt" class="vs-val-amt" data-val="0" style="font-size:15px; font-weight:900;">$0</span>
+                    </span>
+                </div>
+                <div class="vs-bar-container">
+                    <div class="vs-bar-cash" id="ui-bar-cash-fill" style="width: 50%;"></div>
+                    <div class="vs-bar-inv" id="ui-bar-inv-fill" style="width: 50%;"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">曝險資產總體掃描</div>
+                <div class="chart-box blur-target-chart"><canvas id="radarChart"></canvas></div>
+            </div>
+
+            <div class="card hide-in-war-room">
+                <div class="section-header">
+                    <div class="section-title">台股陣列 (API 自動抓價)</div>
+                    <button class="btn-add" onclick="addStock()">＋ 新增艙位</button>
+                </div>
+                <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px; line-height:1.5;">點擊「護盾圖示 🛡️」即可將該標的納入券商質押擔保品計算。</div>
+                <div class="api-status">
+                    <span id="ui-api-status">最新同步: 尚未同步</span>
+                    <button class="btn-refresh" id="btn-fetch" onclick="fetchPrices()"><i class="fa-solid fa-rotate" style="margin-right:4px;"></i>對接證交所</button>
+                </div>
+                <div id="stocks-container" class="blur-target"></div>
+                <div class="sub-chart-box blur-target-chart"><canvas id="stockChart"></canvas></div>
+            </div>
+
+            <div class="card hide-in-war-room">
+                <div class="section-header">
+                    <div class="section-title">基金與海外陣列 (手動現值)</div>
+                    <button class="btn-add" onclick="addFund()">＋ 新增艙位</button>
+                </div>
+                <div id="funds-container" class="blur-target"></div>
+                <div class="sub-chart-box blur-target-chart"><canvas id="fundChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- 資金核心 -->
+        <div id="tab-details" class="tab-content hide-in-war-room">
+            <div class="card blur-target">
+                <div class="section-header">
+                    <div class="section-title">活水儲備庫 (銀行資產)</div>
+                    <button class="btn-add" onclick="addAccountItem()">＋ 新增活存</button>
+                </div>
+                <div id="accounts-container"></div>
+                <div style="margin-top:15px; display:flex; justify-content:space-between; font-size:12px; color:var(--text-sub); font-weight:600; background:rgba(255,255,255,0.03); padding:10px; border-radius:8px;">
+                    <span>美金匯率參數：<b style="color:var(--accent-blue);" id="ui-usd-rate">32.50</b></span>
+                    <span style="font-size:14px; font-weight:700; color:var(--accent-green);">活存總計(TWD)：$<span id="ui-total-cash-sum" data-val="0">0</span></span>
+                </div>
+            </div>
+
+            <div class="card blur-target">
+                <div class="section-header">
+                    <div class="section-title">槓桿借貸引擎 (負債明細)</div>
+                    <button class="btn-add" onclick="addDebtItem()">＋ 新增借貸</button>
+                </div>
+                <div style="font-size:12px; color:var(--text-sub); margin-bottom:12px; line-height:1.5;">各筆引擎獨立精算利率與攤還期數，作為安全流動比之分母依據。</div>
+                <div id="debts-container"></div>
+                <div style="margin-top:15px; text-align:right; font-size:14px; font-weight:700; color:var(--accent-red); background:rgba(248,113,113,0.05); padding:10px; border-radius:8px; border: 1px dashed rgba(248,113,113,0.2);">
+                    負債引擎總額：$<span id="ui-total-debt-sum" data-val="0">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 現金流量 -->
+        <div id="tab-cashflow" class="tab-content hide-in-war-room">
+            <div class="card blur-target" style="border: 1px solid rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05);">
+                <div class="section-header" style="margin-bottom: 10px;">
+                    <div class="section-title" style="color: var(--accent-blue);">🏦 總資產與總負債池</div>
+                </div>
+                <div class="summary-table">
+                    <div class="summary-row">
+                        <div class="summary-cell label">台幣現金總額</div>
+                        <div class="summary-cell val" id="ui-cashflow-cash" data-val="0">$0</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-cell label">質押借款總本金</div>
+                        <div class="summary-cell val" id="ui-cashflow-pledge" data-val="0">$0</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-cell label">銀行信貸總本金</div>
+                        <div class="summary-cell val" id="ui-cashflow-credit" data-val="0">$0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card blur-target" style="border: 1px solid rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.05);">
+                <div class="section-header" style="margin-bottom: 10px;">
+                    <div class="section-title" style="color: var(--accent-green);">💸 預估每月引擎燃料費 (流出)</div>
+                </div>
+                <div class="summary-table">
+                    <div class="summary-row">
+                        <div class="summary-cell label">質押引擎總月息 <span style="font-size:11px; font-weight:500;">(只繳息)</span></div>
+                        <div class="summary-cell val" id="ui-monthly-pledge-interest" data-val="0" style="color: var(--accent-orange);">$0</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-cell label">信貸引擎總月付 <span style="font-size:11px; font-weight:500;">(本+息)</span></div>
+                        <div class="summary-cell val" id="ui-monthly-credit-pmt" data-val="0" style="color: var(--accent-orange);">$0</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-cell label">每月基本生活開銷</div>
+                        <div class="summary-cell val">
+                            <input type="number" class="form-input blur-target" id="input-living-expense" value="30000" style="width: 100px; padding: 6px 10px; font-size: 14px; color: var(--accent-orange); border-color: rgba(251,191,36,0.4);" oninput="updateStateValue('livingExpense', this.value)">
+                        </div>
+                    </div>
+                    <div style="height: 1px; background-color: rgba(52, 211, 153, 0.2); margin: 10px 0;"></div>
+                    <div class="summary-row">
+                        <div class="summary-cell label" style="font-weight:800; color:var(--text-main);">真實總流出</div>
+                        <div class="summary-cell val" id="ui-monthly-total-outflow" data-val="0" style="color: var(--accent-red); font-size:18px; font-weight:900;">$0</div>
+                    </div>
+                    <div class="summary-row" style="margin-top:10px; padding:12px; border-radius:10px;" id="ui-cash-runway-container">
+                        <div class="summary-cell label" style="font-weight:700;">活水燃料續航力</div>
+                        <div class="summary-cell val" id="ui-cash-runway" style="color: var(--accent-green); font-weight:800; font-size:16px;">-- 個月</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card blur-target" style="border: 1px solid rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05);">
+                <div class="section-header" style="margin-bottom: 10px;">
+                    <div class="section-title" style="color: var(--accent-blue); text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);">
+                        💧 活水智慧調節閥 
+                        <i class="fa-solid fa-circle-question" style="margin-left: 8px; font-size: 16px; cursor: pointer; color: var(--accent-blue); opacity: 0.8; transition: 0.2s;" onclick="openModal('modal-vix-logic')"></i>
+                    </div>
+                </div>
+                <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 10px;">系統根據當前 VIX 恐慌指數與真實流出，為您精算數學上真正的安全底線。</p>
+                
+                <div class="summary-table">
+                    <div class="summary-row">
+                        <div class="summary-cell label">當前活水總庫存</div>
+                        <div class="summary-cell val" id="ui-dyn-current-cash" data-val="0" style="color:var(--text-main);">$0</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-cell label">系統判定安全底線</div>
+                        <div class="summary-cell val" id="ui-dyn-safe-line" data-val="0" style="color:var(--accent-orange);">$0</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); border: 1px dashed var(--border-color); border-radius: 12px; padding: 15px; margin-top: 15px; text-align: center; transition: 0.3s;" id="ui-dyn-advice-box"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎛️ 戰術中樞 (全息指揮艙拖曳區) 🎛️ -->
+        <div id="tab-tactics" class="tab-content">
+            <div id="tactics-pinned-area" style="min-height: 5px;"></div>
+            <div id="tactics-divider" style="text-align:center; color:var(--text-sub); font-size:11px; margin: 15px 0 25px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); line-height: 0.1em; display:none;">
+                <span style="background:var(--bg-body); padding:0 10px; font-weight:600;"><i class="fa-solid fa-sort"></i> 以下為未釘選模組 (可自由拖曳排序)</span>
+            </div>
+            <div id="tactics-unpinned-area" style="min-height: 200px;">
+                <!-- 🎯 DCA 狙擊 -->
+                <div class="card hide-in-war-room" id="widget-dca" style="border: 1px solid rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.05);">
+                    <div class="section-header" style="margin-bottom: 10px;">
+                        <div class="section-title" style="color: var(--accent-green); text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);">🎯 發薪日狙擊部署系統</div>
+                        <div class="widget-controls">
+                            <i class="fa-solid fa-thumbtack pin-btn" onclick="togglePinWidget('widget-dca')" title="釘選面板"></i>
+                            <i class="fa-solid fa-grip-vertical drag-handle" title="拖曳排序"></i>
+                        </div>
+                    </div>
+                    <div class="form-row" style="justify-content: flex-start; gap: 15px;">
+                        <div class="form-label" style="color:var(--text-main);">本月新增可用資金 ($)</div>
+                        <input type="number" class="form-input" id="input-sniper-funds" placeholder="例如: 30000" style="width: 140px; border-color: rgba(52, 211, 153, 0.5); color: var(--accent-green);" oninput="runSniperDCA()">
+                    </div>
+                    <div id="sniper-result-container" style="display:none; margin-top:15px; animation: fadeIn 0.3s ease; border-top:1px dashed rgba(52, 211, 153, 0.3); padding-top:15px;"></div>
+                </div>
+
+                <!-- 🔥 VIX 雷達 -->
+                <div class="card" id="widget-vix" style="border: 1px solid rgba(251, 191, 36, 0.4); background: rgba(251, 191, 36, 0.05);">
+                    <div class="section-header" style="margin-bottom: 10px;">
+                        <div class="section-title" style="color: var(--accent-orange); text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);">🔥 VIX 市場情緒雷達</div>
+                        <div class="widget-controls">
+                            <i class="fa-solid fa-thumbtack pin-btn" onclick="togglePinWidget('widget-vix')" title="釘選面板"></i>
+                            <i class="fa-solid fa-grip-vertical drag-handle" title="拖曳排序"></i>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size: 13px; color: var(--text-sub); font-weight: 600;">當前恐慌指數：</div>
+                        <input type="number" class="form-input" id="input-vix-value" value="15.0" step="0.1" style="width: 90px; padding: 6px 10px; font-size:16px; color: var(--accent-orange); border-color: rgba(251,191,36,0.6); text-align:center;" oninput="updateVixSignal(this.value)">
+                    </div>
+                    <div id="vix-signal-result" style="margin-top: 15px; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px dashed var(--accent-orange); text-align: center; transition: 0.3s;"></div>
+                </div>
+
+                <!-- 🌡️ 貪婪濾網 -->
+                <div class="card hide-in-war-room" id="widget-dampener" style="border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.05);">
+                    <div class="section-header" style="margin-bottom: 10px;">
+                        <div class="section-title" style="color: var(--accent-red); text-shadow: 0 0 8px rgba(248, 113, 113, 0.5);">🌡️ 貪婪濾網與乖離減震器</div>
+                        <div class="widget-controls">
+                            <i class="fa-solid fa-thumbtack pin-btn" onclick="togglePinWidget('widget-dampener')" title="釘選面板"></i>
+                            <i class="fa-solid fa-grip-vertical drag-handle" title="拖曳排序"></i>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                        <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">啟用動態減震系統</div>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" id="input-auto-dampener" onchange="toggleDampener(this.checked)" style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider-toggle" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); transition: .4s; border-radius: 24px;"></span>
+                        </label>
+                    </div>
+                    <div id="dampener-settings" style="display:none; margin-top: 10px; border-top: 1px dashed rgba(248,113,113,0.3); padding-top: 15px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size: 13px; color: var(--text-sub); font-weight: 600;">大盤乖離率 <span style="font-weight: 400; font-size: 11px;">(例:對20MA)</span>：</div>
+                            <div style="display:flex; align-items:center;">
+                                <input type="number" class="form-input" id="input-bias-value" value="0.0" step="0.1" style="width: 80px; padding: 6px 10px; font-size:16px; color: var(--accent-red); border-color: rgba(248,113,113,0.6); text-align:right;" oninput="updateBiasRatio(this.value)">
+                                <span style="font-size:14px; color:var(--text-sub); margin-left:6px; font-weight:800;">%</span>
+                            </div>
+                        </div>
+                        <div id="dampener-status-box" style="margin-top:15px; padding:12px; border-radius:8px; text-align:center; transition: 0.3s;"></div>
+                    </div>
+                </div>
+
+                <!-- 🎯 凱利準則 -->
+                <div class="card hide-in-war-room" id="widget-kelly" style="border: 1px solid rgba(236, 72, 153, 0.3); background: rgba(236, 72, 153, 0.05);">
+                    <div class="section-header" style="margin-bottom: 10px;">
+                        <div class="section-title" style="color: var(--accent-pink); text-shadow: 0 0 8px rgba(236, 72, 153, 0.5);">🎯 凱利準則：最佳槓桿甜區</div>
+                        <div class="widget-controls">
+                            <i class="fa-solid fa-thumbtack pin-btn" onclick="togglePinWidget('widget-kelly')" title="釘選面板"></i>
+                            <i class="fa-solid fa-grip-vertical drag-handle" title="拖曳排序"></i>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label">大盤預期年化報酬 (%)</div>
+                        <input type="number" class="form-input" id="input-kelly-mu" value="8.0" step="0.1" style="width: 80px;" oninput="updateStateValue('kellyMu', this.value)">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label">大盤預期年化波動 (%)</div>
+                        <input type="number" class="form-input" id="input-kelly-sigma" value="18.0" step="0.1" style="width: 80px;" oninput="updateStateValue('kellySigma', this.value)">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-label">您的綜合借貸利率 (%)</div>
+                        <input type="number" class="form-input" id="input-kelly-rate" value="2.5" step="0.01" style="width: 80px; color:var(--accent-orange);" readonly>
+                    </div>
+                    <button class="btn-action" style="background-color: #ec4899; color: #fff; box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); margin-top: 15px;" onclick="runKellyScanner()"><i class="fa-solid fa-radar" style="margin-right:6px;"></i>掃描最佳甜區落點</button>
+                    <div id="kelly-result-container" style="display:none; margin-top:20px; animation: fadeIn 0.5s ease;">
+                        <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom: 15px;">
+                            <div style="flex:1; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 11px; color: var(--accent-blue); font-weight: 700;">理論最優 (Full Kelly)</div>
+                                <div id="ui-kelly-full" style="font-size: 24px; color: #fff; font-weight: 900; margin-top: 4px; text-shadow: 0 0 15px rgba(56,189,248,0.6);">--%</div>
+                            </div>
+                            <div style="flex:1; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); padding: 12px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 11px; color: var(--accent-green); font-weight: 700;">實戰穩健 (Half Kelly)</div>
+                                <div id="ui-kelly-half" style="font-size: 24px; color: #fff; font-weight: 900; margin-top: 4px; text-shadow: 0 0 15px rgba(52,211,153,0.6);">--%</div>
+                            </div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.03); border: 1px dashed #ec4899; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px; font-size:13px; color:var(--text-main); line-height:1.5;" id="ui-kelly-advice"></div>
+                        <div class="chart-box" style="height: 180px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 10px;"><canvas id="kellyChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- ⏳ 降落導航 -->
+                <div class="card hide-in-war-room" id="widget-glide" style="border: 1px solid rgba(192, 132, 252, 0.3); background: rgba(192, 132, 252, 0.05);">
+                    <div class="section-header" style="margin-bottom: 10px;">
+                        <div class="section-title" style="color: var(--accent-purple); text-shadow: 0 0 8px rgba(192, 132, 252, 0.5);">⏳ 生命週期自動降落導航</div>
+                        <div class="widget-controls">
+                            <i class="fa-solid fa-thumbtack pin-btn" onclick="togglePinWidget('widget-glide')" title="釘選面板"></i>
+                            <i class="fa-solid fa-grip-vertical drag-handle" title="拖曳排序"></i>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                        <div style="font-size: 14px; font-weight: 700; color: var(--text-main);">啟用自動降槓桿系統</div>
+                        <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" id="input-auto-glidepath" onchange="toggleGlidepath(this.checked)" style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider-toggle" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); transition: .4s; border-radius: 24px;"></span>
+                        </label>
+                    </div>
+                    <div id="glidepath-settings" style="display:none; margin-top: 10px; border-top: 1px dashed rgba(192,132,252,0.3); padding-top: 15px;">
+                        <div class="form-row">
+                            <div class="form-label">起步最高曝險 (%)</div>
+                            <input type="number" class="form-input" id="input-glide-max" value="200" style="width: 80px;" oninput="updateStateValue('glideMax', this.value)">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-label">達標最終曝險 (%)</div>
+                            <input type="number" class="form-input" id="input-glide-min" value="100" style="width: 80px;" oninput="updateStateValue('glideMin', this.value)">
+                        </div>
+                        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:15px; margin-top:15px; text-align:center;">
+                            <div style="font-size:12px; color:var(--text-sub); font-weight:600;">導航計算目標曝險</div>
+                            <div id="ui-glide-calculated" data-val="0" style="font-size:28px; font-weight:900; color:var(--accent-purple); margin-top:4px; text-shadow: 0 0 15px rgba(192, 132, 252, 0.4);">--%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🎯 手動覆寫 -->
+                <div class="card hide-in-war-room" id="widget-manual" style="border: 1px solid rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.05);">
+                    <div class="section-header" style="margin-bottom: 10px;">
+                        <div class="section-title" style="color: var(--accent-blue); text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);">🎯 手動戰術覆寫</div>
+                        <div class="widget-controls">
+                            <i class="fa-solid fa-thumbtack pin-btn" onclick="togglePinWidget('widget-manual')" title="釘選面板"></i>
+                            <i class="fa-solid fa-grip-vertical drag-handle" title="拖曳排序"></i>
+                        </div>
+                    </div>
+                    <div class="form-label" style="text-align:left; margin-bottom: 8px; font-weight: 700;">
+                        當前目標曝險比例：<span id="ui-target-ratio-text" style="color:var(--accent-blue); font-weight:900; font-size:20px;">100</span>%
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" min="50" max="300" step="5" value="100" class="slider" id="input-target-ratio-slider" oninput="updateTargetRatio(this.value)" onchange="updateTargetRatio(this.value)">
+                    </div>
+
+                    <div class="form-label" style="text-align:left; margin-top: 20px; margin-bottom: 8px; font-weight: 700; color: var(--accent-purple);">
+                        ⚖️ 乖離再平衡容忍區間：±<span id="ui-tolerance-ratio-text" style="font-weight:900; font-size:18px;">5</span>%
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" min="0" max="30" step="1" value="5" class="slider slider-purple" id="input-tolerance-ratio-slider" oninput="updateToleranceRatio(this.value)" onchange="updateToleranceRatio(this.value)">
+                    </div>
+
+                    <div class="sim-box" id="simulator-result"></div>
+                </div>
+            
+            </div> <!-- End of Unpinned Area -->
+        </div>
+
+        <!-- 壓力測試 (黑天鵝防禦) -->
+        <div id="tab-risk" class="tab-content hide-in-war-room">
+            <div class="card" style="border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.05);">
+                <div class="section-header" style="margin-bottom: 10px;">
+                    <div class="section-title" style="color: var(--accent-red); text-shadow: 0 0 8px rgba(248, 113, 113, 0.5);">⚠️ 質押斷頭風險監控</div>
+                </div>
+                <div class="summary-table" style="margin-bottom: 20px;">
+                    <div class="summary-row">
+                        <div class="summary-cell label" style="font-weight: 700; color: var(--text-main);">總質押維持率</div>
+                        <div class="summary-cell val" id="ui-margin-ratio" style="font-weight:900; font-size:22px;">--%</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-cell label" style="font-size: 13px;">距離 130% 斷頭約需下跌</div>
+                        <div class="summary-cell val" id="ui-margin-drop" style="color:var(--accent-red); font-size: 15px; font-weight:700;">--%</div>
+                    </div>
+                    <div class="summary-row">
+                        <div class="summary-cell label" style="font-size: 13px;">券商擔保品總市值</div>
+                        <input type="number" class="form-input blur-target" id="input-collateral" readonly style="width:130px; border:none; background:transparent; padding:0; color:var(--accent-green); font-size: 15px;">
+                    </div>
+                </div>
+                
+                <div style="height: 1px; background-color: rgba(248, 113, 113, 0.2); margin: 20px 0;"></div>
+                
+                <div class="section-title" style="color: var(--text-main); margin-bottom:15px; justify-content:center;">🌪️ 黑天鵝壓力測試模擬</div>
+                <div class="form-label" style="text-align:center; font-weight:700;">大盤瞬間重挫 <span id="stress-val" style="color:var(--accent-red); font-weight:900; font-size:20px; text-shadow: 0 0 10px rgba(248, 113, 113, 0.6);">0</span>%</div>
+                <div class="slider-container" style="margin-top:15px;">
+                    <input type="range" min="0" max="50" value="0" class="slider slider-stress" id="stress-slider" oninput="updateStress(this.value)" onchange="updateStress(this.value)">
+                </div>
+                
+                <div style="display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; justify-content: center;">
+                    <button class="btn-add" style="background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.4); color:var(--accent-red);" onclick="setStress(20)">2022 升息 (-20%)</button>
+                    <button class="btn-add" style="background:rgba(248,113,113,0.15); border:1px solid rgba(248,113,113,0.6); color:var(--accent-red);" onclick="setStress(30)">2020 新冠 (-30%)</button>
+                    <button class="btn-add" style="background:rgba(248,113,113,0.25); border:1px solid rgba(248,113,113,0.8); color:var(--accent-red); text-shadow:0 0 5px red;" onclick="setStress(50)">2008 海嘯 (-50%)</button>
+                </div>
+                
+                <div class="stress-result">
+                    <div class="stress-item left">
+                        <div style="font-size:13px; color:var(--text-sub); font-weight:600;">災後淨資產結算</div>
+                        <div class="blur-target" style="font-size:18px; font-weight:900; color:var(--text-main); margin-top:5px;" id="stress-networth" data-val="0">$0</div>
+                    </div>
+                    <div class="stress-item">
+                        <div style="font-size:13px; color:var(--text-sub); font-weight:600;">災後真實曝險</div>
+                        <div style="font-size:18px; font-weight:900; color:var(--accent-orange); margin-top:5px;" id="stress-exposure" data-val="0">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 雲端日誌與歷史快照 -->
+        <div id="tab-settings" class="tab-content">
+            <div class="card hide-in-war-room" style="border: 1px solid rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.05);">
+                <div class="section-header">
+                    <div class="section-title" style="color:var(--accent-green); text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);">☁️ 跨星系雲端同步 (Google Sheets)</div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 12px; line-height: 1.5;">掛載 Apps Script API 實現無縫備份。還原時將一併同步雲端 VIX 指數與即時股價。</p>
+                <div class="form-row" style="flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 15px;">
+                    <input type="text" class="form-input" id="input-gas-url" style="width:100%; text-align:left; font-size:12px; font-weight:500; border-color:var(--accent-green);" placeholder="請貼上您的 Google Apps Script 部署網址">
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-action" id="btn-sync-up" style="margin-top:0; background-color:var(--accent-green); color:#0f172a;" onclick="syncToCloud()"><i class="fa-solid fa-cloud-arrow-up" style="margin-right:6px;"></i>上傳備份</button>
+                    <button class="btn-action btn-backup" id="btn-sync-down" style="margin-top:0; border: 1px solid var(--accent-green); color: var(--accent-green); background: rgba(52, 211, 153, 0.15); box-shadow:none;" onclick="syncFromCloud()"><i class="fa-solid fa-cloud-arrow-down" style="margin-right:6px;"></i>下載還原</button>
+                </div>
+            </div>
+
+            <div class="card hide-in-war-room" style="border: 1px solid rgba(251, 191, 36, 0.3); background: rgba(251, 191, 36, 0.05);">
+                <div class="section-header" style="margin-bottom: 10px;">
+                    <div class="section-title" style="color:var(--accent-orange); text-shadow: 0 0 8px rgba(251,191,36,0.5);">🎮 戰術成就與微型任務</div>
+                </div>
+                <div id="ui-current-main-quest" style="margin-bottom: 15px;"></div>
+                <div style="font-size:12px; color:var(--text-sub); margin: 15px 0 8px 0; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:4px;">🎯 進行中的支線任務：</div>
+                <div id="ui-side-quests"></div>
+                <div style="font-size:12px; color:var(--text-sub); margin: 20px 0 8px 0; font-weight:800; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:4px;">🏆 榮譽徽章牆：</div>
+                <div class="badge-grid" id="ui-badge-wall">
+                    <div class="badge-item" id="badge-first"><div class="badge-icon">🌱</div><div class="badge-item-title">啟航者</div></div>
+                    <div class="badge-item" id="badge-1m"><div class="badge-icon">💰</div><div class="badge-item-title">百萬將鋒</div></div>
+                    <div class="badge-item" id="badge-5m"><div class="badge-icon">🚀</div><div class="badge-item-title">半息巡航</div></div>
+                    <div class="badge-item" id="badge-runway"><div class="badge-icon">🛡️</div><div class="badge-item-title">防禦大師</div></div>
+                    <div class="badge-item" id="badge-debt"><div class="badge-icon">🪶</div><div class="badge-item-title">無重力</div></div>
+                    <div class="badge-item" id="badge-precise"><div class="badge-icon">⚖️</div><div class="badge-item-title">絕對精準</div></div>
+                </div>
+            </div>
+
+            <!-- 里程碑 -->
+            <div class="card hide-in-war-room" style="border: 1px solid rgba(192, 132, 252, 0.3); background: rgba(192, 132, 252, 0.05);">
+                <div class="section-header">
+                    <div class="section-title" style="color:var(--accent-purple); text-shadow: 0 0 8px rgba(192, 132, 252, 0.5);">🏆 財富自由里程碑</div>
+                    <span class="milestone-badge" id="ui-milestone-percent">0%</span>
+                </div>
+                <div class="form-row" style="margin-top:10px;">
+                    <div class="form-label">設定終極淨資產目標：</div>
+                    <input type="number" class="form-input" id="input-target-networth" value="10000000" style="width:140px; border-color:var(--accent-purple);" oninput="updateStateValue('targetNetWorth', this.value)">
+                </div>
+                <div class="milestone-container">
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="ui-progress-bar"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-sub); font-weight:600;">
+                        <span>啟航起點</span>
+                        <span class="blur-target">終點: $<span id="ui-target-networth-txt">10,000,000</span></span>
+                    </div>
+                </div>
+                
+                <div class="chronos-box">
+                    <div class="chronos-title"><i class="fa-solid fa-hourglass-half fa-spin-pulse" style="color: var(--accent-purple);"></i> Chronos 奇異點倒數引擎</div>
+                    <div id="ui-chronos-display" class="chronos-time blur-target">系統演算中...</div>
+                    <div style="font-size:11px; color:var(--text-sub); margin-top:8px; display:flex; justify-content:center; align-items:center; gap:4px;">依據當前 <i class="fa-solid fa-crosshairs" style="color:var(--accent-blue);"></i>實質槓桿 與 <i class="fa-solid fa-coins" style="color:var(--accent-green);"></i>每月動能 動態精算</div>
+                </div>
+            </div>
+
+            <!-- Monte Carlo -->
+            <div class="card hide-in-war-room" style="border: 1px solid rgba(236, 72, 153, 0.3); background: rgba(236, 72, 153, 0.05);">
+                <div class="section-header" style="margin-bottom: 10px;">
+                    <div class="section-title" style="color:var(--accent-pink); text-shadow: 0 0 8px rgba(236, 72, 153, 0.5);">🎲 奇異點預測矩陣 (Monte Carlo)</div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 15px; line-height: 1.5;">利用蒙地卡羅隨機漫步演算法，根據當前槓桿倍數與歷史波動，瞬間模擬 1,000 條平行宇宙發展路徑。</p>
+                
+                <div class="form-row">
+                    <div class="form-label">推演期間 (年)</div>
+                    <input type="number" class="form-input" id="mc-years" value="10" style="width: 80px;" oninput="updateStateValue('mcYears', this.value)">
+                </div>
+                <div class="form-row">
+                    <div class="form-label">大盤年化報酬率 (%)</div>
+                    <input type="number" class="form-input" id="mc-mu" value="8.0" step="0.1" style="width: 80px;" oninput="updateStateValue('mcMu', this.value)">
+                </div>
+                <div class="form-row">
+                    <div class="form-label">大盤年化波動率 (%)</div>
+                    <input type="number" class="form-input" id="mc-sigma" value="18.0" step="0.1" style="width: 80px;" oninput="updateStateValue('mcSigma', this.value)">
+                </div>
+                <div class="form-row">
+                    <div class="form-label">每月持續投入 ($)</div>
+                    <input type="number" class="form-input" id="mc-pmt" value="30000" step="1000" style="width: 100px;" oninput="updateStateValue('mcPmt', this.value)">
+                </div>
+
+                <button class="btn-action" style="background-color: #ec4899; color: #fff; box-shadow: 0 0 15px rgba(236, 72, 153, 0.3); margin-top: 15px;" onclick="runMonteCarlo()"><i class="fa-solid fa-bolt" style="margin-right:6px;"></i>推演 1,000 條世界線</button>
+                
+                <div id="mc-result-container" style="display:none; margin-top:20px; animation: fadeIn 0.5s ease;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <div style="background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); padding: 10px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 12px; color: var(--accent-green); font-weight: 700;">🏆 達成目標機率</div>
+                            <div id="mc-success-prob" data-val="0" style="font-size: 22px; color: #fff; font-weight: 900; margin-top: 5px; text-shadow: 0 0 10px rgba(52,211,153,0.5);">--%</div>
+                        </div>
+                        <div style="background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); padding: 10px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 12px; color: var(--accent-red); font-weight: 700;">💀 斷頭破產機率</div>
+                            <div id="mc-ruin-prob" data-val="0" style="font-size: 22px; color: #fff; font-weight: 900; margin-top: 5px; text-shadow: 0 0 10px rgba(248,113,113,0.5);">--%</div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(192, 132, 252, 0.5); padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px;">
+                        <div style="font-size: 12px; color: var(--accent-purple); font-weight: 700;">📍 預期財富中位數落點</div>
+                        <div id="mc-median-w" data-val="0" style="font-size: 20px; color: #fff; font-weight: 900; margin-top: 5px; text-shadow: 0 0 15px rgba(192,132,252,0.6);">$--</div>
+                    </div>
+                    <div class="chart-box" style="height: 180px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 10px;">
+                        <canvas id="mcChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快照與歷史軌跡 -->
+            <div class="card">
+                <div class="section-header hide-in-war-room" style="margin-bottom:10px;">
+                    <div class="section-title">📊 資產快照與成長軌跡</div>
+                    <button class="btn-add" style="background-color: var(--accent-blue); border:none; color: #0f172a;" onclick="recordSnapshot()"><i class="fa-solid fa-camera" style="margin-right:4px;"></i>記錄今日</button>
+                </div>
+                
+                <div class="section-title war-room-only" style="display:none; color:var(--accent-blue); margin-bottom:15px; justify-content:center;">📈 淨資產成長軌跡</div>
+                <div class="chart-box blur-target-chart" style="height: 180px; margin-bottom: 20px; display: none; background: rgba(0,0,0,0.3); border-radius:12px; border:1px solid rgba(255,255,255,0.05); padding:10px;" id="ui-history-chart-container">
+                    <canvas id="historyChart"></canvas>
+                </div>
+
+                <div id="snapshot-list-container" class="hide-in-war-room" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+
+            <!-- 本地備份 -->
+            <div class="card hide-in-war-room">
+                <div class="section-title">本地終端備份</div>
+                <div style="display:flex; flex-direction:column; gap:12px; margin-top: 15px;">
+                    <button class="btn-action" style="background-color: rgba(255,255,255,0.1); color: var(--text-main); box-shadow:none; border:1px solid rgba(255,255,255,0.2);" onclick="exportToFile()"><i class="fa-solid fa-download" style="margin-right:8px;"></i>下載備份檔 (.json)</button>
+                    <button class="btn-action btn-backup" style="background-color: transparent; border: 1px dashed var(--text-sub); color: var(--text-sub); box-shadow: none;" onclick="document.getElementById('import-file').click()"><i class="fa-solid fa-folder-open" style="margin-right:8px;"></i>讀取本地備份檔</button>
+                    <input type="file" id="import-file" style="display:none;" accept=".json" onchange="importFromFile(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        V16.19 戰略全息艙 (行動端導航優化)<br>
+        <span style="font-size: 11px; opacity: 0.6;">資料來源：台灣政府 OpenAPI + Yahoo Finance</span>
+    </div>
+</div>
+
+<!-- 🛸 懸浮戰略核心 (FAB) 🛸 -->
+<div class="fab-container hide-in-war-room" id="ui-fab-container">
+    <button class="fab-main" onclick="toggleFAB()"><i class="fa-solid fa-plus"></i></button>
+    <div class="fab-menu">
+        <button class="fab-item" onclick="triggerFabAction('recordSnapshot')">
+            <span class="fab-label">記錄快照</span>
+            <div class="fab-icon"><i class="fa-solid fa-camera"></i></div>
+        </button>
+        <button class="fab-item" onclick="triggerFabAction('addStock')">
+            <span class="fab-label">新增台股</span>
+            <div class="fab-icon"><i class="fa-solid fa-chart-line"></i></div>
+        </button>
+        <button class="fab-item" onclick="triggerFabAction('addAccountItem')">
+            <span class="fab-label">新增活存</span>
+            <div class="fab-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+        </button>
+        <button class="fab-item" onclick="triggerFabAction('fetchPrices')">
+            <span class="fab-label">對接股價</span>
+            <div class="fab-icon"><i class="fa-solid fa-rotate"></i></div>
+        </button>
+    </div>
+</div>
+
+<!-- 📱 行動端底部導航列 (Bottom Tab Bar) -->
+<div class="bottom-nav hide-in-war-room" id="bottom-nav">
+    <div class="bottom-nav-item active" onclick="showTab('tab-notes')">
+        <i class="fa-solid fa-book-open"></i>
+        <span>筆記</span>
+    </div>
+    <div class="bottom-nav-item" onclick="showTab('tab-overview')">
+        <i class="fa-solid fa-satellite-dish"></i>
+        <span>雷達</span>
+    </div>
+    <div class="bottom-nav-item" onclick="showTab('tab-details')">
+        <i class="fa-solid fa-building-columns"></i>
+        <span>資金</span>
+    </div>
+    <div class="bottom-nav-item" onclick="showTab('tab-cashflow')">
+        <i class="fa-solid fa-money-bill-transfer"></i>
+        <span>金流</span>
+    </div>
+    <div class="bottom-nav-item" onclick="showTab('tab-tactics')">
+        <i class="fa-solid fa-crosshairs"></i>
+        <span>戰術</span>
+    </div>
+    <div class="bottom-nav-item" onclick="showTab('tab-risk')">
+        <i class="fa-solid fa-shield-virus"></i>
+        <span>防禦</span>
+    </div>
+    <div class="bottom-nav-item" onclick="showTab('tab-settings')">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <span>雲端</span>
+    </div>
+</div>
+
+<!-- 說明書 Modal -->
+<div id="modal-vix-logic" class="modal-overlay" style="display:none;" onclick="closeModal('modal-vix-logic')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="color:var(--accent-blue); margin:0; font-size:16px;">💡 活水調節閥 底層邏輯</h3>
+            <button style="background:none; border:none; color:var(--text-sub); font-size:20px; cursor:pointer; transition:0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-sub)'" onclick="closeModal('modal-vix-logic')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="font-size:13px; color:var(--text-main); line-height:1.6;">
+            <p style="margin-bottom:12px; color:var(--text-sub);">系統採用<b>「動態風險平價模型」</b>，隨市場恐慌指數(VIX)自動精算您的資金護城河厚度。</p>
+            <div style="background:var(--input-bg); border:1px dashed var(--border-color); padding:12px; border-radius:8px; margin-bottom:15px; text-align:center;">
+                <span style="color:var(--accent-orange); font-weight:800; font-size:14px;">安全底線</span> = <br>
+                ( 真實月流出 × <span style="color:var(--accent-green); font-weight:800;">存活月數</span> ) <br>+<br> ( 總負債額 × <span style="color:var(--accent-purple); font-weight:800;">防禦比例</span> )
+            </div>
+            <div style="display:grid; gap:10px;">
+                <div style="background:rgba(52, 211, 153, 0.1); border:1px solid rgba(52, 211, 153, 0.3); padding:10px; border-radius:8px;">
+                    <b style="color:var(--accent-green); font-size:14px;">🟢 太平巡航 (VIX < 20)</b><br>
+                    參數：<span style="color:var(--accent-green); font-weight:700;">3個月</span>存活金 + <span style="color:var(--accent-purple); font-weight:700;">10%</span>負債準備<br>
+                </div>
+                <div style="background:rgba(251, 191, 36, 0.1); border:1px solid rgba(251, 191, 36, 0.3); padding:10px; border-radius:8px;">
+                    <b style="color:var(--accent-orange); font-size:14px;">🟡 震盪警戒 (VIX 20~29.9)</b><br>
+                    參數：<span style="color:var(--accent-green); font-weight:700;">6個月</span>存活金 + <span style="color:var(--accent-purple); font-weight:700;">20%</span>負債準備<br>
+                </div>
+                <div style="background:rgba(248, 113, 113, 0.1); border:1px solid rgba(248, 113, 113, 0.3); padding:10px; border-radius:8px;">
+                    <b style="color:var(--accent-red); font-size:14px;">🚨 恐慌蔓延 (VIX 30~39.9)</b><br>
+                    參數：<span style="color:var(--accent-green); font-weight:700;">12個月</span>存活金 + <span style="color:var(--accent-purple); font-weight:700;">30%</span>負債準備<br>
+                </div>
+                <div style="background:rgba(248, 113, 113, 0.2); border:1px solid rgba(248, 113, 113, 0.6); padding:10px; border-radius:8px;">
+                    <b style="color:#ef4444; font-size:14px; text-shadow:0 0 5px red;">💥 史詩崩盤 (VIX ≥ 40)</b><br>
+                    參數：<span style="color:var(--accent-green); font-weight:700;">24個月</span>存活金 + <span style="color:var(--accent-purple); font-weight:700;">40%</span>負債準備<br>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-bias-manual" class="modal-overlay" style="display:none;" onclick="closeModal('modal-bias-manual')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="color:var(--accent-orange); margin:0; font-size:16px;">📖 乖離率 (BIAS) 實戰觀測手冊</h3>
+            <button style="background:none; border:none; color:var(--text-sub); font-size:20px; cursor:pointer; transition:0.3s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-sub)'" onclick="closeModal('modal-bias-manual')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div style="font-size:13px; color:var(--text-main); line-height:1.6;">
+            <p style="margin-bottom:12px; color:var(--text-sub);"><b>乖離率 (BIAS)</b> 是衡量股價與移動平均線偏離程度的指標，用以判斷市場是否「過熱」或「過度悲觀」。</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let usdTwdRate = 32.50; 
+    let realStateBackup = null; 
+    let isAppReady = false; 
+    
+    let animFrames = {}; 
+
+    let state = {
+        cash: 1909350, targetRatio: 100, toleranceRatio: 5, targetNetWorth: 10000000, gasUrl: "", 
+        autoGlidepath: false, glideMax: 200, glideMin: 100, vix: 15.0, dynamicSafeLine: 0,
+        autoDampener: false, biasRatio: 0.0, effectiveTargetRatio: 100,
+        kellyMu: 8.0, kellySigma: 18.0, mcYears: 10, mcMu: 8.0, mcSigma: 18.0, mcPmt: 30000,
+        livingExpense: 30000, blindMode: false, warRoomMode: false, sandboxMode: false,
+        accounts: [], debts: [], stocks: [], funds: [], notes: [], history: [], marketPrices: {},
+        achievements: { first_blood: false, nw_1m: false, nw_5m: false, runway_6m: false, debt_light: false, perfect_exp: false },
+        tacticsOrder: ['widget-dca', 'widget-vix', 'widget-dampener', 'widget-kelly', 'widget-glide', 'widget-manual'],
+        tacticsPinned: []
+    };
+
+    let charts = {};
+    const chartPalette = ['#38bdf8', '#34d399', '#fbbf24', '#f87171', '#c084fc', '#ec4899', '#22d3ee', '#14b8a6'];
+    let currentFleetLevel = -1;
+
+    function animateNumber(id, newValue, prefix = '', suffix = '', decimals = 0) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+        
+        newValue = parseFloat(newValue) || 0; 
+        const startValue = parseFloat(obj.getAttribute('data-val')) || 0;
+        
+        if (Math.abs(startValue - newValue) < 0.001) {
+            obj.setAttribute('data-val', newValue);
+            obj.innerText = prefix + (decimals > 0 ? newValue.toFixed(decimals) : formatNum(newValue)) + suffix;
+            return;
+        }
+        
+        obj.setAttribute('data-val', newValue);
+        
+        if (animFrames[id]) cancelAnimationFrame(animFrames[id]);
+        
+        const duration = 1200; 
+        const startTime = performance.now();
+        
+        function update(currentTime) {
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+            
+            const easeOutProgress = 1 - Math.pow(1 - progress, 4); 
+            const currentVal = startValue + (newValue - startValue) * easeOutProgress;
+            
+            obj.innerText = prefix + (decimals > 0 ? currentVal.toFixed(decimals) : formatNum(currentVal)) + suffix;
+            
+            if (progress < 1) {
+                animFrames[id] = requestAnimationFrame(update);
+            } else {
+                obj.innerText = prefix + (decimals > 0 ? newValue.toFixed(decimals) : formatNum(newValue)) + suffix;
+                delete animFrames[id];
+            }
+        }
+        animFrames[id] = requestAnimationFrame(update);
+    }
+
+    function toggleFAB() {
+        const fab = document.getElementById('ui-fab-container');
+        if(fab) fab.classList.toggle('active');
+    }
+
+    function triggerFabAction(action) {
+        toggleFAB();
+        if (action === 'recordSnapshot') {
+            recordSnapshot();
+            showTab('tab-settings'); 
+        } else if (action === 'addStock') {
+            addStock();
+            showTab('tab-overview'); 
+            setTimeout(() => { document.getElementById('stocks-container').scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 150);
+        } else if (action === 'addAccountItem') {
+            addAccountItem();
+            showTab('tab-details'); 
+            setTimeout(() => { document.getElementById('accounts-container').scrollIntoView({ behavior: 'smooth', block: 'end' }); }, 150);
+        } else if (action === 'fetchPrices') {
+            showTab('tab-overview'); 
+            setTimeout(() => { fetchPrices(); }, 150);
+        }
+    }
+
+    document.addEventListener('click', function(event) {
+        const fab = document.getElementById('ui-fab-container');
+        if (fab && fab.classList.contains('active') && !fab.contains(event.target)) {
+            fab.classList.remove('active');
+        }
+    });
+
+    function fireConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particles = [];
+        const colors = ['#38bdf8', '#34d399', '#fbbf24', '#f87171', '#c084fc', '#ec4899'];
+        for(let i = 0; i < 200; i++) {
+            particles.push({ x: canvas.width / 2, y: canvas.height / 2 + 100, r: Math.random() * 6 + 4, dx: Math.random() * 12 - 6, dy: Math.random() * -15 - 5, color: colors[Math.floor(Math.random() * colors.length)], tilt: Math.floor(Math.random() * 10) - 10, tiltAngleInc: (Math.random() * 0.07) + 0.05, tiltAngle: 0 });
+        }
+        let angle = 0; let animationId;
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); let active = false;
+            for(let i = 0; i < particles.length; i++) {
+                let p = particles[i]; p.tiltAngle += p.tiltAngleInc; p.y += (Math.cos(angle + p.dx) + 1 + p.r / 2) / 2; p.x += Math.sin(angle); p.x += p.dx; p.y += p.dy; p.dy += 0.3;
+                ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color; ctx.moveTo(p.x + p.tilt + p.r, p.y); ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r); ctx.stroke();
+                if (p.y < canvas.height) active = true;
+            }
+            if (active) { animationId = requestAnimationFrame(render); } else { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        }
+        render();
+    }
+    function triggerConfetti() { fireConfetti(); }
+
+    function updateFleetStatus(netWorth) {
+        const levels = [
+            { min: 0, max: 100000, icon: '🛶', name: '沿岸木筏', color: '#94a3b8' },
+            { min: 100000, max: 1000000, icon: '🚤', name: '武裝快艇', color: '#34d399' },
+            { min: 1000000, max: 5000000, icon: '🛳️', name: '重型巡洋艦', color: '#38bdf8' },
+            { min: 5000000, max: 10000000, icon: '🚀', name: '跨星系太空梭', color: '#c084fc' },
+            { min: 10000000, max: 50000000, icon: '🛸', name: '星際母艦', color: '#ec4899' },
+            { min: 50000000, max: Infinity, icon: '🌌', name: '宇宙霸主死星', color: '#fbbf24' }
+        ];
+        let currentLvlIdx = 0;
+        for (let i = levels.length - 1; i >= 0; i--) { if (netWorth >= levels[i].min) { currentLvlIdx = i; break; } }
+        let lvl = levels[currentLvlIdx]; let nextLvl = levels[currentLvlIdx + 1];
+        let fc = document.getElementById('fleet-container'); if(!fc) return;
+
+        document.getElementById('fleet-icon').innerText = lvl.icon;
+        let nameEl = document.getElementById('fleet-name');
+        nameEl.innerText = lvl.name; nameEl.style.color = lvl.color; nameEl.style.textShadow = `0 0 15px ${lvl.color}99`;
+        fc.style.borderColor = `${lvl.color}66`; fc.style.boxShadow = `0 0 20px ${lvl.color}1A`; fc.style.background = `linear-gradient(180deg, ${lvl.color}0D 0%, rgba(0,0,0,0.2) 100%)`;
+
+        let progressEl = document.getElementById('fleet-progress'); let nextReqEl = document.getElementById('fleet-next-req');
+        if (nextLvl) {
+            let range = nextLvl.min - lvl.min; let currentProgress = netWorth - lvl.min;
+            let pct = Math.min(100, Math.max(0, (currentProgress / range) * 100));
+            progressEl.style.width = pct + '%'; progressEl.style.background = lvl.color; progressEl.style.boxShadow = `0 0 10px ${lvl.color}`;
+            let shortfall = nextLvl.min - netWorth;
+            nextReqEl.innerHTML = `距離升級 [<span style="color:${nextLvl.color}; font-weight:800;">${nextLvl.name}</span>] 尚需: $<span id="ui-fleet-shortfall" data-val="${shortfall}">${formatNum(shortfall)}</span>`;
+            animateNumber('ui-fleet-shortfall', shortfall, '');
+            nextReqEl.style.display = 'block'; document.getElementById('fleet-progress-bg').style.display = 'block';
+        } else {
+            progressEl.style.width = '100%'; progressEl.style.background = lvl.color; progressEl.style.boxShadow = `0 0 10px ${lvl.color}`;
+            nextReqEl.innerHTML = `<span style="color:${lvl.color}; font-weight:800;">已達最高階級，您是宇宙的霸主！</span>`;
+        }
+
+        if (currentFleetLevel === -1) { currentFleetLevel = currentLvlIdx; fc.style.display = 'block'; } 
+        else if (currentLvlIdx > currentFleetLevel && isAppReady) { triggerConfetti(); setTimeout(() => { alert(`🎉 恭喜指揮官！\n您的淨資產突破新門檻，艦隊已成功進化為【${lvl.name}】！`); }, 300); currentFleetLevel = currentLvlIdx; } 
+        else if (currentLvlIdx < currentFleetLevel) { currentFleetLevel = currentLvlIdx; }
+    }
+
+    function showTab(tabId) {
+        if (state.warRoomMode) return;
+        
+        // 1. 切換顯示的內容區塊
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        
+        // 2. 同步更新頂部導航 (Desktop)
+        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+        const tabs = Array.from(document.querySelectorAll('.nav-tab'));
+        const clickedTab = tabs.find(t => t.getAttribute('onclick').includes(tabId));
+        if(clickedTab) { 
+            clickedTab.classList.add('active'); 
+            clickedTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); 
+        }
+
+        // 3. 同步更新底部導航 (Mobile)
+        document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+        const bTabs = Array.from(document.querySelectorAll('.bottom-nav-item'));
+        const clickedBTab = bTabs.find(t => t.getAttribute('onclick').includes(tabId));
+        if(clickedBTab) {
+            clickedBTab.classList.add('active');
+        }
+
+        // 重新繪製圖表以適應寬度變化
+        setTimeout(() => { for (let id in charts) { if (charts[id]) charts[id].resize(); } }, 50);
+    }
+
+    function formatNum(num) { return Math.round(num || 0).toLocaleString(); }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function loadData() {
+        try {
+            const historicalKeys = ['exposure_radar_v16_18_data', 'exposure_radar_v16_17_data', 'exposure_radar_v16_16_data'];
+            let saved = null; for (let key of historicalKeys) { saved = localStorage.getItem(key); if (saved) { break; } }
+            if (saved) { 
+                let parsed = JSON.parse(saved);
+                if (parsed.accounts && Array.isArray(parsed.accounts)) state.accounts = parsed.accounts;
+                if (parsed.debts && Array.isArray(parsed.debts)) state.debts = parsed.debts;
+                if (parsed.stocks && Array.isArray(parsed.stocks)) state.stocks = parsed.stocks;
+                if (parsed.funds && Array.isArray(parsed.funds)) state.funds = parsed.funds;
+                if (parsed.notes && Array.isArray(parsed.notes)) state.notes = parsed.notes;
+                if (parsed.history && Array.isArray(parsed.history)) state.history = parsed.history;
+                if (parsed.marketPrices) state.marketPrices = parsed.marketPrices;
+                if (parsed.achievements) state.achievements = parsed.achievements;
+                if (parsed.tacticsOrder && Array.isArray(parsed.tacticsOrder)) state.tacticsOrder = parsed.tacticsOrder;
+                if (parsed.tacticsPinned && Array.isArray(parsed.tacticsPinned)) state.tacticsPinned = parsed.tacticsPinned;
+                state.cash = parsed.cash !== undefined ? parseFloat(parsed.cash) : state.cash;
+                state.targetRatio = parsed.targetRatio !== undefined ? parseFloat(parsed.targetRatio) : state.targetRatio;
+                state.toleranceRatio = parsed.toleranceRatio !== undefined ? parseFloat(parsed.toleranceRatio) : state.toleranceRatio;
+                state.targetNetWorth = parsed.targetNetWorth !== undefined ? parseFloat(parsed.targetNetWorth) : state.targetNetWorth;
+                state.autoGlidepath = parsed.autoGlidepath !== undefined ? parsed.autoGlidepath : state.autoGlidepath;
+                state.glideMax = parsed.glideMax !== undefined ? parseFloat(parsed.glideMax) : state.glideMax;
+                state.glideMin = parsed.glideMin !== undefined ? parseFloat(parsed.glideMin) : state.glideMin;
+                state.vix = parsed.vix !== undefined ? parseFloat(parsed.vix) : state.vix;
+                state.autoDampener = parsed.autoDampener !== undefined ? parsed.autoDampener : state.autoDampener;
+                state.biasRatio = parsed.biasRatio !== undefined ? parseFloat(parsed.biasRatio) : state.biasRatio;
+                state.kellyMu = parsed.kellyMu !== undefined ? parseFloat(parsed.kellyMu) : 8.0;
+                state.kellySigma = parsed.kellySigma !== undefined ? parseFloat(parsed.kellySigma) : 18.0;
+                state.mcYears = parsed.mcYears !== undefined ? parseFloat(parsed.mcYears) : 10;
+                state.mcMu = parsed.mcMu !== undefined ? parseFloat(parsed.mcMu) : 8.0;
+                state.mcSigma = parsed.mcSigma !== undefined ? parseFloat(parsed.mcSigma) : 18.0;
+                state.mcPmt = parsed.mcPmt !== undefined ? parseFloat(parsed.mcPmt) : 30000;
+                state.livingExpense = parsed.livingExpense !== undefined ? parseFloat(parsed.livingExpense) : 30000;
+                state.blindMode = parsed.blindMode !== undefined ? parsed.blindMode : state.blindMode;
+                state.warRoomMode = parsed.warRoomMode !== undefined ? parsed.warRoomMode : state.warRoomMode;
+                state.sandboxMode = false; state.gasUrl = parsed.gasUrl || state.gasUrl;
+            }
+        } catch (e) { console.error("快取載入失敗:", e); }
+
+        if (state.accounts.length === 0) state.accounts.push({ id: 'a1', name: '綜合活期預備金戶', balance: 0, currency: 'TWD' });
+        if (state.debts.length === 0) state.debts.push({ id: 'd1', type: 'pledge', name: '股票質押', principal: 0, rate: 2.5, term: 0 });
+        if (!state.achievements) state.achievements = { first_blood: false, nw_1m: false, nw_5m: false, runway_6m: false, debt_light: false, perfect_exp: false };
+        if (!state.tacticsOrder || state.tacticsOrder.length === 0) state.tacticsOrder = ['widget-dca', 'widget-vix', 'widget-dampener', 'widget-kelly', 'widget-glide', 'widget-manual'];
+        if (!state.tacticsPinned) state.tacticsPinned = [];
+
+        state.debts.forEach(d => { d.principal = parseFloat(d.principal) || 0; d.rate = parseFloat(d.rate) || (d.type === 'pledge' ? 2.5 : 3.0); d.term = parseFloat(d.term) || (d.type === 'credit' ? 7 : 0); });
+        state.accounts.forEach(acc => { acc.balance = parseFloat(acc.balance) || 0; if(!acc.currency) acc.currency = 'TWD'; });
+        state.stocks.forEach(s => { if (s.isCollateral === undefined) s.isCollateral = !!(s.broker && s.broker.includes('元大')); });
+        state.funds.forEach(f => { if (f.isCollateral === undefined) f.isCollateral = false; });
+
+        let chkGlide = document.getElementById('input-auto-glidepath'); if(chkGlide) chkGlide.checked = state.autoGlidepath;
+        let inGlideMax = document.getElementById('input-glide-max'); if(inGlideMax) inGlideMax.value = state.glideMax;
+        let inGlideMin = document.getElementById('input-glide-min'); if(inGlideMin) inGlideMin.value = state.glideMin;
+        toggleGlidepath(state.autoGlidepath, false);
+
+        let chkDampener = document.getElementById('input-auto-dampener'); if(chkDampener) chkDampener.checked = state.autoDampener;
+        let inBias = document.getElementById('input-bias-value'); if(inBias) inBias.value = state.biasRatio;
+        toggleDampener(state.autoDampener, false);
+
+        let inVix = document.getElementById('input-vix-value'); if(inVix) inVix.value = state.vix;
+        updateVixSignal(state.vix);
+
+        let elToleranceSlider = document.getElementById('input-tolerance-ratio-slider'); if(elToleranceSlider) elToleranceSlider.value = state.toleranceRatio;
+        let elToleranceText = document.getElementById('ui-tolerance-ratio-text'); if(elToleranceText) elToleranceText.innerText = state.toleranceRatio;
+        let inNetWorth = document.getElementById('input-target-networth'); if(inNetWorth) inNetWorth.value = state.targetNetWorth;
+        let inGasUrl = document.getElementById('input-gas-url'); if(inGasUrl) inGasUrl.value = state.gasUrl;
+        let inKellyMu = document.getElementById('input-kelly-mu'); if(inKellyMu) inKellyMu.value = state.kellyMu;
+        let inKellySigma = document.getElementById('input-kelly-sigma'); if(inKellySigma) inKellySigma.value = state.kellySigma;
+        let inMcYears = document.getElementById('mc-years'); if(inMcYears) inMcYears.value = state.mcYears;
+        let inMcMu = document.getElementById('mc-mu'); if(inMcMu) inMcMu.value = state.mcMu;
+        let inMcSigma = document.getElementById('mc-sigma'); if(inMcSigma) inMcSigma.value = state.mcSigma;
+        let inMcPmt = document.getElementById('mc-pmt'); if(inMcPmt) inMcPmt.value = state.mcPmt;
+        let inLivingExp = document.getElementById('input-living-expense'); if(inLivingExp) inLivingExp.value = state.livingExpense;
+
+        applyBlindMode(); applyWarRoomMode(false);
+    }
+
+    function saveData() { if (state.sandboxMode) return; localStorage.setItem('exposure_radar_v16_18_data', JSON.stringify(state)); }
+
+    function renderTacticsWidgets() {
+        const pArea = document.getElementById('tactics-pinned-area'); const uArea = document.getElementById('tactics-unpinned-area'); const divider = document.getElementById('tactics-divider');
+        if(!pArea || !uArea) return;
+        state.tacticsPinned.forEach(id => { let el = document.getElementById(id); if (el) { pArea.appendChild(el); let btn = el.querySelector('.pin-btn'); if (btn) btn.classList.add('active'); el.classList.add('widget-pinned'); } });
+        state.tacticsOrder.forEach(id => { if (!state.tacticsPinned.includes(id)) { let el = document.getElementById(id); if (el) { uArea.appendChild(el); let btn = el.querySelector('.pin-btn'); if (btn) btn.classList.remove('active'); el.classList.remove('widget-pinned'); } } });
+        if (state.tacticsPinned.length > 0) { divider.style.display = 'block'; } else { divider.style.display = 'none'; }
+    }
+
+    function saveWidgetOrder() {
+        let pArea = document.getElementById('tactics-pinned-area'); let uArea = document.getElementById('tactics-unpinned-area');
+        let pIds = Array.from(pArea.children).map(el => el.id).filter(id => id); let uIds = Array.from(uArea.children).map(el => el.id).filter(id => id);
+        state.tacticsPinned = pIds; state.tacticsOrder = uIds; saveData(); renderTacticsWidgets(); 
+    }
+
+    window.togglePinWidget = function(widgetId) {
+        if (state.tacticsPinned.includes(widgetId)) { state.tacticsPinned = state.tacticsPinned.filter(id => id !== widgetId); if (!state.tacticsOrder.includes(widgetId)) state.tacticsOrder.unshift(widgetId); } 
+        else { state.tacticsPinned.push(widgetId); state.tacticsOrder = state.tacticsOrder.filter(id => id !== widgetId); }
+        saveData(); renderTacticsWidgets();
+    };
+
+    function initSortableWidgets() {
+        if (typeof Sortable === 'undefined') { setTimeout(initSortableWidgets, 100); return; }
+        let uArea = document.getElementById('tactics-unpinned-area'); let pArea = document.getElementById('tactics-pinned-area');
+        new Sortable(uArea, { handle: '.drag-handle', animation: 150, ghostClass: 'sortable-ghost', onEnd: saveWidgetOrder });
+        new Sortable(pArea, { handle: '.drag-handle', animation: 150, ghostClass: 'sortable-ghost', onEnd: saveWidgetOrder });
+    }
+
+    function toggleSandbox() {
+        if (!state.sandboxMode) {
+            if(!confirm("即將啟動平行沙盤推演維度。\n在此模式下的所有修改都不會儲存，且不會更動雲端備份。\n確定要啟動嗎？")) return;
+            realStateBackup = JSON.parse(JSON.stringify(state)); state.sandboxMode = true;
+            document.body.classList.add('sandbox-mode'); document.getElementById('ui-sandbox-banner').style.display = 'flex';
+            let btn = document.getElementById('btn-sandbox'); if(btn) { btn.innerHTML = '<i class="fa-solid fa-flask"></i> 退出沙盤'; btn.onclick = discardSandbox; }
+            alert("🌌 平行沙盤已部署成功！您可以自由增減、借款或加碼以進行測試。");
+        }
+    }
+
+    function applySandbox() {
+        if(confirm("⚠️ 注意：套用後，目前推演的數據將直接【強制覆寫】您的真實資產檔案！\n確定要套用嗎？")) {
+            state.sandboxMode = false; realStateBackup = null; 
+            document.body.classList.remove('sandbox-mode'); document.getElementById('ui-sandbox-banner').style.display = 'none';
+            let btn = document.getElementById('btn-sandbox'); if(btn) { btn.innerHTML = '<i class="fa-solid fa-flask"></i> 平行沙盤'; btn.onclick = toggleSandbox; }
+            saveData(); alert("✅ 套用成功！沙盤配置已寫入真實資產大腦中。");
+        }
+    }
+
+    function discardSandbox() {
+        if(confirm("確定要放棄目前所有的沙盤修改，安全折返真實宇宙嗎？")) {
+            state = JSON.parse(JSON.stringify(realStateBackup)); state.sandboxMode = false; realStateBackup = null;
+            document.body.classList.remove('sandbox-mode'); document.getElementById('ui-sandbox-banner').style.display = 'none';
+            let btn = document.getElementById('btn-sandbox'); if(btn) { btn.innerHTML = '<i class="fa-solid fa-flask"></i> 平行沙盤'; btn.onclick = toggleSandbox; }
+            renderStocks(); renderFunds(); renderDetailsPage(); updateTotals(); renderTacticsWidgets();
+            alert("↩️ 折返成功！已完全恢復到進入沙盤前的原始資產狀態。");
+        }
+    }
+
+    function toggleBlindMode() { state.blindMode = !state.blindMode; saveData(); applyBlindMode(); }
+
+    function applyBlindMode() {
+        let btn = document.getElementById('btn-blind-shield');
+        if (state.blindMode) { document.body.classList.add('blind-mode'); if(btn) { btn.classList.add('active'); btn.innerHTML = '<i class="fa-solid fa-eye"></i> 解除盲視'; } } 
+        else { document.body.classList.remove('blind-mode'); if(btn) { btn.classList.remove('active'); btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> 盲視護盾'; } }
+    }
+
+    function toggleWarRoom() { state.warRoomMode = !state.warRoomMode; saveData(); applyWarRoomMode(true); }
+
+    function applyWarRoomMode(animate) {
+        let btn = document.getElementById('btn-war-room'); let titles = document.querySelectorAll('.war-room-only');
+        if (state.warRoomMode) {
+            document.body.classList.add('war-room-mode');
+            if(btn) { btn.classList.add('active'); btn.innerHTML = '<i class="fa-solid fa-xmark"></i> 退出戰情室'; }
+            titles.forEach(t => t.style.display = 'flex');
+        } else {
+            document.body.classList.remove('war-room-mode');
+            if(btn) { btn.classList.remove('active'); btn.innerHTML = '<i class="fa-solid fa-desktop"></i> 戰情室'; }
+            titles.forEach(t => t.style.display = 'none'); showTab('tab-overview');
+        }
+        if(animate) { setTimeout(() => { for (let id in charts) { if (charts[id]) charts[id].resize(); } }, 350); }
+    }
+
+    function toggleGlidepath(isChecked, update = true) {
+        state.autoGlidepath = isChecked; let p = document.getElementById('glidepath-settings'); if(p) p.style.display = isChecked ? 'block' : 'none';
+        let manualSlider = document.getElementById('input-target-ratio-slider');
+        if(manualSlider) { if (isChecked) { manualSlider.disabled = true; manualSlider.style.opacity = 0.4; manualSlider.style.cursor = 'not-allowed'; } else { manualSlider.disabled = false; manualSlider.style.opacity = 1; manualSlider.style.cursor = 'pointer'; } }
+        if (update) updateTotals();
+    }
+
+    function toggleDampener(isChecked, update = true) {
+        state.autoDampener = isChecked; let p = document.getElementById('dampener-settings'); if(p) p.style.display = isChecked ? 'block' : 'none';
+        if (update) updateTotals();
+    }
+
+    function updateBiasRatio(val) { state.biasRatio = parseFloat(val) || 0; updateTotals(); }
+
+    async function syncToCloud() {
+        if (state.sandboxMode) return alert("❌ 您當前處於沙盤推演維度，禁止將模擬測試數據上傳至雲端大腦！");
+        let gasUrl = document.getElementById('input-gas-url').value.trim(); if (!gasUrl) return alert("請先填寫 Google Apps Script 網址！");
+        state.gasUrl = gasUrl; saveData();
+        let btn = document.getElementById('btn-sync-up'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 上傳中...'; btn.disabled = true;
+        try { let res = await fetch(gasUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(state) }); let result = await res.json(); if (result.status === "success") { alert("☁️ 資料已安全備份至雲端。"); } else { alert("備份失敗。"); } } catch(e) { alert("連線失敗：" + e.message); } finally { btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> 上傳備份'; btn.disabled = false; }
+    }
+
+    async function syncFromCloud() {
+        if (state.sandboxMode) return alert("❌ 沙盤推演狀態下，禁止雲端下載還原！請先退出沙盤。");
+        let gasUrl = document.getElementById('input-gas-url').value.trim(); if (!gasUrl) return alert("請先填寫 Google Apps Script 網址！");
+        state.gasUrl = gasUrl; saveData(); let btn = document.getElementById('btn-sync-down'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 還原中...'; btn.disabled = true;
+        try {
+            let res = await fetch(gasUrl); let result = await res.json(); let incomingState = null;
+            if (result && result.state) { incomingState = typeof result.state === 'string' ? JSON.parse(result.state) : result.state; if (result.cloudPrices && incomingState) { if (!incomingState.marketPrices) incomingState.marketPrices = {}; for (let code in result.cloudPrices) { incomingState.marketPrices[code] = result.cloudPrices[code]; } } if (result.cloudVix !== undefined && incomingState) { incomingState.vix = parseFloat(result.cloudVix); } } else if (result && result.targetRatio !== undefined) { incomingState = result; }
+            if (incomingState) {
+                Object.keys(incomingState).forEach(k => { if(state[k] !== undefined) state[k] = incomingState[k]; });
+                if(state.stocks) { state.stocks.forEach(s => { let c = (s.code || '').trim().toUpperCase(); if(state.marketPrices[c]) s.price = state.marketPrices[c]; }); }
+                saveData(); let inVix = document.getElementById('input-vix-value'); if(inVix && state.vix) { inVix.value = state.vix.toFixed(2); updateVixSignal(state.vix); }
+                alert("☁️ 雲端還原與股價/VIX同步成功！"); location.reload(); 
+            } else { alert("雲端內無有效備份資料。"); }
+        } catch(e) { alert("連線失敗：" + e.message); } finally { btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> 下載還原'; btn.disabled = false; }
+    }
+
+    function exportToFile() {
+        const blob = new Blob([JSON.stringify(state)], { type: "application/json" }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `exposure_backup_v16_19_holographic_${new Date().toISOString().split('T')[0]}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+    
+    function importFromFile(event) {
+        const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
+        reader.onload = function(e) { try { let incoming = JSON.parse(e.target.result); Object.assign(state, incoming); saveData(); alert("✅ 還原成功！"); location.reload(); } catch(err) { alert("檔案讀取失敗！"); } };
+        reader.readAsText(file);
+    }
+
+    function recordSnapshot() {
+        let netWorth = parseFloat(document.getElementById('ui-net-worth').getAttribute('data-val')) || 0;
+        let exposure = parseFloat(document.getElementById('ui-exposure-ratio').getAttribute('data-val')) || 0;
+        let today = new Date().toISOString().split('T')[0]; 
+        if (isNaN(netWorth) || netWorth <= 0) return alert("淨資產為 0，請先配置明細！");
+        if (!state.history) state.history = []; let existingIdx = state.history.findIndex(h => h.date === today); let newRecord = { date: today, netWorth: netWorth, exposure: exposure };
+        if (existingIdx >= 0) { if(confirm("今日已記錄過，要覆寫嗎？")) { state.history[existingIdx] = newRecord; } else { return; } } else { state.history.push(newRecord); }
+        saveData(); renderSnapshots(); updateTotals(); alert("📸 今日快照已寫入！");
+    }
+
+    function deleteSnapshot(date) { if(confirm('刪除這天的紀錄？')) { state.history = state.history.filter(h => h.date !== date); saveData(); renderSnapshots(); updateTotals(); } }
+
+    function renderSnapshots() {
+        let container = document.getElementById('snapshot-list-container');
+        if (!state.history || state.history.length === 0) { container.innerHTML = '<div style="text-align:center; color:var(--text-sub); font-size:13px; padding:20px; border-radius:12px; border:1px dashed var(--border-color);">尚未有快照，記錄第一筆資產吧！</div>'; let chartContainer = document.getElementById('ui-history-chart-container'); if(chartContainer) chartContainer.style.display = 'none'; return; }
+        let sorted = [...state.history].sort((a, b) => b.date.localeCompare(a.date)); let html = '';
+        for (let i = 0; i < sorted.length; i++) {
+            let curr = sorted[i]; let prev = sorted[i+1]; let diffHtml = '<span class="diff-flat">初次紀錄</span>';
+            if (prev) { let diff = curr.netWorth - prev.netWorth; if (diff > 0) { diffHtml = `<span class="diff-up">+ $${formatNum(diff)}</span>`; } else if (diff < 0) { diffHtml = `<span class="diff-down">- $${formatNum(Math.abs(diff))}</span>`; } else { diffHtml = `<span class="diff-flat">持平</span>`; } }
+            html += `<div class="snapshot-item"><div class="snapshot-header"><span style="font-size:12px; font-weight:700; color:var(--text-sub);"><i class="fa-solid fa-calendar-day" style="margin-right:6px;"></i>${curr.date}</span><button style="background:none; border:none; color:var(--text-sub); cursor:pointer; padding:0; transition:0.2s;" onmouseover="this.style.color='var(--accent-red)'" onmouseout="this.style.color='var(--text-sub)'" onclick="deleteSnapshot('${curr.date}')"><i class="fa-solid fa-xmark"></i></button></div><div style="display:flex; justify-content:space-between; align-items:flex-end;"><div><div style="font-size:11px; color:var(--text-sub); margin-bottom:4px; font-weight:600;">淨資產 / 曝險</div><div class="blur-target" style="font-size:18px; font-weight:900; color:var(--text-main); line-height:1;">$${formatNum(curr.netWorth)} <span style="font-size:13px; font-weight:800; color:var(--accent-orange); margin-left:6px; background:rgba(251, 191, 36, 0.15); border:1px solid rgba(251,191,36,0.3); padding:2px 6px; border-radius:6px;">${curr.exposure}%</span></div></div><div style="text-align:right;"><div style="font-size:11px; color:var(--text-sub); margin-bottom:4px; font-weight:600;">較前次</div><div class="blur-target">${diffHtml}</div></div></div></div>`;
+        }
+        container.innerHTML = html;
+        if (charts.history && state.history.length > 0) { let containerEl = document.getElementById('ui-history-chart-container'); if(containerEl) containerEl.style.display = 'block'; let chartData = [...state.history].sort((a, b) => a.date.localeCompare(b.date)); charts.history.data.labels = chartData.map(d => d.date.substring(5)); charts.history.data.datasets[0].data = chartData.map(d => d.netWorth); charts.history.update(); }
+    }
+
+    function renderNotes() {
+        const container = document.getElementById('notes-list-container');
+        if (!state.notes || state.notes.length === 0) { container.innerHTML = '<div style="text-align:center; color:var(--text-sub); font-size:13px; padding:20px; font-weight:600; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;">神經元庫存為空</div>'; return; }
+        container.innerHTML = state.notes.map((note, index) => `<div class="note-item"><div style="flex:1;"><div class="note-content-text">${note.text}</div><div style="font-size:11px; color:var(--accent-blue); font-weight:600; margin-top:5px;"><i class="fa-solid fa-calendar-day" style="margin-right:4px;"></i>${note.date}</div></div><button class="btn-delete" style="width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center;" onclick="deleteNote(${index})"><i class="fa-solid fa-trash-can" style="font-size:13px;"></i></button></div>`).join('');
+    }
+    
+    function addNote() { const inputEl = document.getElementById('note-input'); const text = inputEl.value.trim(); if (!text) return; const now = new Date(); const dateStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`; if(!state.notes) state.notes = []; state.notes.unshift({ id: 'n'+Date.now(), date: dateStr, text: text }); inputEl.value = ''; saveData(); renderNotes(); }
+    function deleteNote(index) { if (confirm('確定要抹除嗎？')) { state.notes.splice(index, 1); saveData(); renderNotes(); } }
+
+    async function fetchUsdExchangeRate() { try { let res = await fetch('https://open.er-api.com/v6/latest/USD'); let data = await res.json(); if (data && data.rates && data.rates.TWD) { usdTwdRate = parseFloat(data.rates.TWD); let rateEl = document.getElementById('ui-usd-rate'); if(rateEl) rateEl.innerText = usdTwdRate.toFixed(2); updateTotals(); renderDetailsPage(); } } catch(e) {} }
+
+    function renderDetailsPage() {
+        let accContainer = document.getElementById('accounts-container');
+        if(accContainer) { accContainer.innerHTML = state.accounts.map((acc, i) => `<div class="inventory-card"><div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;"><input type="text" class="inv-input-text" style="font-weight:700;" value="${acc.name || ''}" oninput="updateDetailItem('accounts', ${i}, 'name', this.value)"><button class="btn-delete" style="width:34px; height:34px; padding:0; flex-shrink:0;" onclick="removeDetailItem('accounts', ${i})"><i class="fa-solid fa-trash-can" style="font-size:13px;"></i></button></div><div style="display:flex; justify-content:space-between; align-items:center;"><select class="inv-select" style="padding:8px 10px; font-weight:700;" onchange="updateDetailItem('accounts', ${i}, 'currency', this.value)"><option value="TWD" ${acc.currency==='TWD'?'selected':''}>TWD</option><option value="USD" ${acc.currency==='USD'?'selected':''}>USD</option></select><div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px;"><div style="display:flex; align-items:center; gap:5px;"><span style="font-size:14px; font-weight:700; color:var(--text-sub);">${acc.currency==='USD'?'US$':'NT$'}</span><input type="number" class="inv-input-num blur-target" style="width:125px; font-size:14px;" value="${acc.balance}" oninput="updateDetailItem('accounts', ${i}, 'balance', this.value)"></div>${acc.currency === 'USD' ? `<span class="blur-target" style="font-size:11px; color:var(--accent-blue); font-weight:700;">≒ $${formatNum(acc.balance * usdTwdRate)} NTD</span>` : ''}</div></div></div>`).join(''); }
+        
+        let debtContainer = document.getElementById('debts-container');
+        if(debtContainer) { debtContainer.innerHTML = state.debts.map((debt, i) => `<div class="inventory-card"><div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;"><input type="text" class="inv-input-text" style="font-weight:700;" value="${debt.name || ''}" oninput="updateDetailItem('debts', ${i}, 'name', this.value)"><button class="btn-delete" style="width:34px; height:34px; padding:0; flex-shrink:0;" onclick="removeDetailItem('debts', ${i})"><i class="fa-solid fa-trash-can" style="font-size:13px;"></i></button></div><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><select class="inv-select" style="padding:8px 10px; font-weight:700;" onchange="updateDetailItem('debts', ${i}, 'type', this.value)"><option value="pledge" ${debt.type==='pledge'?'selected':''}>質押 (僅繳息)</option><option value="credit" ${debt.type==='credit'?'selected':''}>信貸 (本息攤還)</option></select><div style="display:flex; align-items:center; gap:5px;"><span style="font-size:13px; font-weight:600; color:var(--text-sub);">本金 $</span><input type="number" class="inv-input-num blur-target" style="width:110px; font-size:14px;" value="${debt.principal}" oninput="updateDetailItem('debts', ${i}, 'principal', this.value)"></div></div><div style="display:flex; justify-content:flex-end; align-items:center; gap:10px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.1);"><div style="display:flex; align-items:center; gap:4px;"><span style="font-size:12px; font-weight:600; color:var(--text-sub);">年利率(%)</span><input type="number" class="inv-input-num" style="width:60px; font-size:13px; padding:4px 6px;" value="${debt.rate}" step="0.01" oninput="updateDetailItem('debts', ${i}, 'rate', this.value)"></div>${debt.type === 'credit' ? `<div style="display:flex; align-items:center; gap:4px;"><span style="font-size:12px; font-weight:600; color:var(--text-sub);">期數(年)</span><input type="number" class="inv-input-num" style="width:50px; font-size:13px; padding:4px 6px;" value="${debt.term}" step="1" oninput="updateDetailItem('debts', ${i}, 'term', this.value)"></div>` : ''}</div></div>`).join(''); }
+    }
+
+    function updateDetailItem(type, idx, field, val) { state[type][idx][field] = (field==='name'||field==='type'||field==='currency') ? val : (parseFloat(val) || 0); updateTotals(); if(field === 'currency' || field === 'type') renderDetailsPage(); }
+    function addAccountItem() { state.accounts.push({ id:'a'+Date.now(), name:'新活水庫', balance:0, currency:'TWD' }); renderDetailsPage(); updateTotals(); }
+    function addDebtItem() { state.debts.push({ id:'d'+Date.now(), type:'credit', name:'新借貸引擎', principal:0, rate: 3.0, term: 7 }); renderDetailsPage(); updateTotals(); }
+    function removeDetailItem(type, idx) { state[type].splice(idx,1); renderDetailsPage(); updateTotals(); }
+
+    window.toggleCollateral = function(type, idx) { state[type][idx].isCollateral = !state[type][idx].isCollateral; saveData(); if (type === 'stocks') renderStocks(); else renderFunds(); updateTotals(); }
+
+    function renderStocks() {
+        const container = document.getElementById('stocks-container');
+        if (state.stocks.length === 0) { container.innerHTML = '<div style="text-align:center; color:var(--text-sub); font-size:13px; padding:15px; font-weight:600; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;">掃描無結果，陣列為空。</div>'; return; }
+        container.innerHTML = state.stocks.map((stock, index) => `<div class="inventory-card"><div class="inv-header"><button class="btn-collateral ${stock.isCollateral ? 'active' : ''}" onclick="toggleCollateral('stocks', ${index})" title="設為質押擔保品"><i class="fa-solid fa-shield-halved"></i></button><input type="text" class="inv-input-text" data-type="stock" data-idx="${index}" data-field="broker" value="${stock.broker || ''}" placeholder="券商"><input type="text" class="inv-input-code" data-type="stock" data-idx="${index}" data-field="code" value="${stock.code || ''}" placeholder="代碼"><select class="inv-select" data-type="stock" data-idx="${index}" data-field="mult"><option value="1" ${stock.mult==1?'selected':''}>1x</option><option value="2" ${stock.mult==2?'selected':''}>2x</option><option value="0" ${stock.mult==0?'selected':''}>0x</option></select><button class="btn-delete" onclick="removeStock(${index})"><i class="fa-solid fa-trash-can"></i></button></div><div class="inv-calc"><div style="display:flex; align-items:center; gap:5px;"><input type="number" class="inv-input-num blur-target" data-type="stock" data-idx="${index}" data-field="shares" value="${stock.shares}"> 股 × <input type="number" class="inv-input-num" data-type="stock" data-idx="${index}" data-field="price" value="${stock.price}"> 元</div><div class="inv-value blur-target" id="stock-val-${index}">=$${formatNum((parseFloat(stock.shares)||0) * (parseFloat(stock.price)||0))}</div></div></div>`).join('');
+        attachListListeners(document.getElementById('stocks-container'));
+    }
+
+    function renderFunds() {
+        const container = document.getElementById('funds-container');
+        if (state.funds.length === 0) { container.innerHTML = '<div style="text-align:center; color:var(--text-sub); font-size:13px; padding:15px; font-weight:600; border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px;">掃描無結果，陣列為空。</div>'; return; }
+        container.innerHTML = state.funds.map((fund, index) => `<div class="inventory-card"><div class="inv-header"><button class="btn-collateral ${fund.isCollateral ? 'active' : ''}" onclick="toggleCollateral('funds', ${index})" title="設為質押擔保品"><i class="fa-solid fa-shield-halved"></i></button><input type="text" class="inv-input-text" data-type="fund" data-idx="${index}" data-field="name" value="${fund.name || ''}" placeholder="基金名稱"><select class="inv-select" data-type="fund" data-idx="${index}" data-field="mult"><option value="1" ${fund.mult==1?'selected':''}>1x</option><option value="2" ${fund.mult==2?'selected':''}>2x</option><option value="0" ${fund.mult==0?'selected':''}>0x</option></select><button class="btn-delete" onclick="removeFund(${index})"><i class="fa-solid fa-trash-can"></i></button></div><div class="inv-calc"><span>現值：</span> <div style="display:flex; align-items:center; gap:5px;">$ <input type="number" class="inv-input-num blur-target" style="width:120px;" data-type="fund" data-idx="${index}" data-field="value" value="${fund.value}"></div></div></div>`).join('');
+        attachListListeners(document.getElementById('funds-container'));
+    }
+
+    function attachListListeners(container) {
+        container.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('input', function(e) {
+                let type = e.target.getAttribute('data-type'); let idx = parseInt(e.target.getAttribute('data-idx')); let field = e.target.getAttribute('data-field'); let val = e.target.value;
+                if (type === 'stock') { state.stocks[idx][field] = (field === 'shares' || field === 'price' || field === 'mult') ? (parseFloat(val) || 0) : val; if (field === 'shares' || field === 'price') { let valEl = document.getElementById(`stock-val-${idx}`); if(valEl) valEl.innerText = '=$' + formatNum((parseFloat(state.stocks[idx].shares)||0) * (parseFloat(state.stocks[idx].price)||0)); } } else if (type === 'fund') { state.funds[idx][field] = (field === 'value' || field === 'mult') ? (parseFloat(val) || 0) : val; }
+                updateTotals();
+            });
+        });
+    }
+
+    function addStock() { state.stocks.push({ id: 's'+Date.now(), broker: '', code: '', shares: 0, price: 0, mult: 1, isCollateral: false }); renderStocks(); updateTotals(); }
+    function removeStock(idx) { if(confirm('卸載部位？')) { state.stocks.splice(idx, 1); renderStocks(); updateTotals(); } }
+    function addFund() { state.funds.push({ id: 'f'+Date.now(), name: '', value: 0, mult: 1, isCollateral: false }); renderFunds(); updateTotals(); }
+    function removeFund(idx) { if(confirm('卸載部位？')) { state.funds.splice(idx, 1); renderFunds(); updateTotals(); } }
+
+    async function fetchPrices() {
+        let btn = document.getElementById('btn-fetch'); 
+        let originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 閃電對接中...'; 
+        btn.disabled = true;
+
+        try {
+            // 1. 整理所有不重複的股票代碼
+            let uniqueCodes = [...new Set(state.stocks.map(s => ((s.code || '').trim()).toUpperCase()).filter(c => c !== ''))];
+            if(uniqueCodes.length === 0) { 
+                alert("⚠️ 股票陣列為空，請先輸入股票代碼。");
+                btn.innerHTML = originalText; 
+                btn.disabled = false; 
+                return; 
+            }
+
+            let successCount = 0;
+            let priceMap = {};
+
+            // ====== 引擎 A：台灣政府 OpenAPI (免 Proxy，最穩定) ======
+            console.log("啟動引擎 A: 嘗試直連政府 OpenAPI...");
+            try {
+                // 平行發送兩個請求，設定 6 秒超時
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+                let [resTwse, resTpex] = await Promise.all([
+                    fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL', { signal: controller.signal }).catch(e => { console.warn("TWSE 失敗:", e); return null; }),
+                    fetch('https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes', { signal: controller.signal }).catch(e => { console.warn("TPEx 失敗:", e); return null; })
+                ]);
+                clearTimeout(timeoutId);
+
+                // 解析上市 (TWSE) 資料
+                if (resTwse && resTwse.ok) {
+                    let twseData = await resTwse.json();
+                    twseData.forEach(item => {
+                        let code = item.Code ? item.Code.trim() : null;
+                        let priceStr = item.ClosingPrice;
+                        if (code && priceStr) {
+                            let p = parseFloat(priceStr.replace(/,/g, ''));
+                            if (!isNaN(p) && p > 0) priceMap[code] = p;
+                        }
+                    });
+                }
+
+                // 解析上櫃 (TPEx) 資料
+                if (resTpex && resTpex.ok) {
+                    let tpexData = await resTpex.json();
+                    tpexData.forEach(item => {
+                        // 櫃買中心的代碼欄位可能是 SecuritiesCompanyCode 或 code
+                        let code = (item.SecuritiesCompanyCode || item.code || "").trim();
+                        // 櫃買中心的收盤價欄位可能是 Close 或 close
+                        let priceStr = item.Close || item.close; 
+                        
+                        if (code && priceStr) {
+                            let p = parseFloat(priceStr.replace(/,/g, ''));
+                            if (!isNaN(p) && p > 0) priceMap[code] = p;
+                        }
+                    });
+                }
+
+                // 將抓到的價格對應到使用者的清單
+                uniqueCodes.forEach(code => {
+                    if (priceMap[code]) { 
+                        state.marketPrices[code] = priceMap[code]; 
+                        successCount++; 
+                    }
+                });
+            } catch (e) {
+                console.error("政府 OpenAPI 抓取錯誤:", e);
+            }
+
+            // ====== 引擎 B：若官方資料庫漏接，使用 Proxy 嘗試 Yahoo Finance 備援 ======
+            if (successCount < uniqueCodes.length) {
+                console.log(`啟動引擎 B (Yahoo備援)...`);
+                
+                // 找出還沒抓到價格的代碼
+                let missingCodes = uniqueCodes.filter(code => !priceMap[code]);
+                let symbols = [];
+                missingCodes.forEach(code => { 
+                    symbols.push(`${code}.TW`); 
+                    symbols.push(`${code}.TWO`); 
+                });
+                
+                let yfUrl = `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${symbols.join(',')}`;
+                
+                // 使用多個代理嘗試
+                const proxies = [
+                    'https://corsproxy.io/?url=',
+                    'https://api.allorigins.win/raw?url=',
+                ]; 
+                
+                let yfData = null;
+                for (let proxy of proxies) { 
+                    try { 
+                        console.log("嘗試使用 Proxy:", proxy);
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 4000); 
+                        let finalUrl = proxy + encodeURIComponent(yfUrl);
+                        let res = await fetch(finalUrl, { signal: controller.signal }); 
+                        clearTimeout(timeoutId);
+                        
+                        if (res.ok) { 
+                            yfData = await res.json(); 
+                            break; 
+                        } 
+                    } catch (e) { 
+                        console.warn("Proxy 失敗:", proxy); 
+                    } 
+                }
+
+                // 解析 Yahoo 報價
+                if (yfData && yfData.spark && yfData.spark.result) {
+                    yfData.spark.result.forEach(item => {
+                        let codeMatch = item.symbol.match(/^([A-Z0-9]+)\.(TW|TWO)$/);
+                        if (codeMatch && item.response && item.response[0] && item.response[0].meta) {
+                            let price = item.response[0].meta.regularMarketPrice;
+                            if (price) { 
+                                state.marketPrices[codeMatch[1]] = price; 
+                                successCount++; 
+                            }
+                        }
+                    });
+                }
+            }
+
+            // ====== 結果寫入與畫面更新 ======
+            if (successCount > 0) {
+                state.stocks.forEach(stock => { 
+                    let code = ((stock.code || '').trim()).toUpperCase(); 
+                    if(state.marketPrices[code]) { stock.price = state.marketPrices[code]; } 
+                });
+                
+                let now = new Date(); 
+                let timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                let apiStatusEl = document.getElementById('ui-api-status');
+                if(apiStatusEl) apiStatusEl.innerText = `最新同步: ${timeStr}`;
+                
+                renderStocks(); 
+                updateTotals();
+                alert(`✅ 對接成功！已同步 ${successCount} 檔標的。`);
+            } else {
+                alert("⚠️ 股價未更新：所有資料庫皆無回應，或代碼輸入錯誤。");
+            }
+        } catch (error) { 
+            console.error("整體對接流程發生錯誤:", error);
+            alert("⚠️ 系統發生不可預期的錯誤，請稍後再試。");
+        } finally { 
+            btn.innerHTML = originalText; 
+            btn.disabled = false; 
+        }
+    }
+
+    function updateVixSignal(val) {
+        let vix = parseFloat(val) || 0; state.vix = vix; saveData(); let res = document.getElementById('vix-signal-result'); if (!res) return;
+        if (vix >= 50) { res.innerHTML = '<div style="font-size: 24px; font-weight: 900; color: var(--accent-red); text-shadow:0 0 15px rgba(248,113,113,0.8);">💥 大大買進！</div><div style="font-size: 13px; color: var(--text-main); margin-top: 6px; font-weight:600;">百年難見極度恐慌，全軍突擊！</div>'; res.style.borderColor = 'var(--accent-red)'; res.style.background = 'rgba(248, 113, 113, 0.15)'; } 
+        else if (vix >= 40) { res.innerHTML = '<div style="font-size: 20px; font-weight: 900; color: var(--accent-orange); text-shadow:0 0 10px rgba(251,191,36,0.6);">🚨 中中買進！</div><div style="font-size: 13px; color: var(--text-main); margin-top: 6px; font-weight:600;">恐慌蔓延，逢低加碼契機！</div>'; res.style.borderColor = 'var(--accent-orange)'; res.style.background = 'rgba(234, 88, 12, 0.15)'; } 
+        else if (vix >= 30) { res.innerHTML = '<div style="font-size: 18px; font-weight: 900; color: var(--accent-orange);">⚠️ 小小買進！</div><div style="font-size: 13px; color: var(--text-sub); margin-top: 6px; font-weight:600;">情緒開始鬆動，分批進場。</div>'; res.style.borderColor = 'rgba(251, 191, 36, 0.6)'; res.style.background = 'rgba(251, 191, 36, 0.1)'; } 
+        else { res.innerHTML = '<div style="font-size: 16px; font-weight: 800; color: var(--accent-green); text-shadow:0 0 8px rgba(52,211,153,0.5);">🛡️ 航線穩定</div><div style="font-size: 13px; color: var(--text-sub); margin-top: 6px; font-weight:600;">執行再平衡戰術即可。</div>'; res.style.borderColor = 'var(--accent-green)'; res.style.background = 'rgba(52, 211, 153, 0.1)'; }
+    }
+
+    function calculatePMT(principal, annualRate, years) { if (principal <= 0) return 0; if (annualRate <= 0) return principal / (years * 12); let monthlyRate = (annualRate / 100) / 12; let months = years * 12; return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1); }
+    function setStress(val) { let slider = document.getElementById('stress-slider'); if (slider) { slider.value = val; updateStress(val); } }
+
+    function updateDrawdown(currentNetWorth) {
+        let ath = currentNetWorth; let athDate = new Date().toISOString().split('T')[0];
+        if (state.history && state.history.length > 0) { state.history.forEach(h => { if (h.netWorth > ath) { ath = h.netWorth; athDate = h.date; } }); }
+        let mddEl = document.getElementById('ui-underwater-tracker'); if (!mddEl) return;
+        if (currentNetWorth < ath && ath > 0) {
+            let dropPct = ((currentNetWorth - ath) / ath) * 100; let diffDays = Math.ceil(Math.abs(new Date() - new Date(athDate)) / (1000 * 60 * 60 * 24));
+            mddEl.style.display = 'block';
+            mddEl.innerHTML = `<div class="underwater-box"><div style="font-size:12px; font-weight:800; margin-bottom:12px; display:flex; align-items:center; color:#38bdf8;"><i class="fa-solid fa-water" style="margin-right:6px;"></i>深海潛航監控模式啟動</div><div style="display:flex; justify-content:space-between; align-items:flex-end;"><div><div style="font-size:11px; color:#94a3b8; font-weight:600;">距離高點最大回撤 (MDD)</div><div style="font-size:22px; font-weight:900; color:var(--accent-red); text-shadow:0 0 10px rgba(248,113,113,0.5);">${dropPct.toFixed(2)}%</div></div><div style="text-align:right;"><div style="font-size:11px; color:#94a3b8; font-weight:600;">水下閉氣存活天數</div><div style="font-size:22px; font-weight:900; color:#fff; text-shadow:0 0 10px rgba(255,255,255,0.5);">${diffDays} <span style="font-size:12px; font-weight:normal;">天</span></div></div></div><div style="font-size:11px; color:#94a3b8; margin-top:8px; text-align:right;">歷史高點: $${formatNum(ath)} (${athDate})</div><div class="water-bubble" style="width:10px; height:10px; left:20%; animation-delay: 0s;"></div><div class="water-bubble" style="width:15px; height:15px; left:60%; animation-delay: 1.5s;"></div><div class="water-bubble" style="width:8px; height:8px; left:80%; animation-delay: 3s;"></div></div>`;
+        } else { mddEl.style.display = 'none'; }
+    }
+
+    function updateDynamicBuffer(totalCash, totalMonthlyOutflow, totalDebt, vix) {
+        let safeLine = 0; let runwayMonths = 3; let debtReservePct = 0.1;
+        if (vix >= 40) { runwayMonths = 24; debtReservePct = 0.4; } else if (vix >= 30) { runwayMonths = 12; debtReservePct = 0.3; } else if (vix >= 20) { runwayMonths = 6; debtReservePct = 0.2; } else { runwayMonths = 3; debtReservePct = 0.1; }
+        safeLine = (totalMonthlyOutflow * runwayMonths) + (totalDebt * debtReservePct); state.dynamicSafeLine = safeLine; 
+        
+        animateNumber('ui-dyn-current-cash', totalCash, '$');
+        animateNumber('ui-dyn-safe-line', safeLine, '$');
+        
+        let elAdviceBox = document.getElementById('ui-dyn-advice-box');
+        if (elAdviceBox) {
+            if (totalCash >= safeLine) {
+                let excess = totalCash - safeLine;
+                if (excess > (safeLine * 0.2) && excess > 0) { 
+                    elAdviceBox.style.borderColor = 'var(--accent-blue)'; elAdviceBox.style.background = 'rgba(56, 189, 248, 0.05)';
+                    elAdviceBox.innerHTML = `<div style="font-size:13px; color:var(--accent-blue); font-weight:800; margin-bottom:4px;"><i class="fa-solid fa-lightbulb"></i> 資金閒置 (Cash Drag) 提示</div><div style="font-size:13px; color:var(--text-main); line-height:1.5;">您目前有高達 <span style="color:var(--accent-blue); font-weight:900; font-size:16px;">$${formatNum(excess)}</span> 的資金處於「過度防禦」狀態。建議可將其分批投入火炮陣列，提升整體資金使用效率。</div>`;
+                } else {
+                    elAdviceBox.style.borderColor = 'var(--accent-green)'; elAdviceBox.style.background = 'rgba(52, 211, 153, 0.05)';
+                    elAdviceBox.innerHTML = `<div style="font-size:13px; color:var(--accent-green); font-weight:800; margin-bottom:4px;"><i class="fa-solid fa-shield-check"></i> 防禦完美平衡</div><div style="font-size:13px; color:var(--text-main); line-height:1.5;">當前的活水庫存非常貼合目前的市場風險與負債水位。無需調整。</div>`;
+                }
+            } else {
+                let shortage = safeLine - totalCash; elAdviceBox.style.borderColor = 'var(--accent-orange)'; elAdviceBox.style.background = 'rgba(251, 191, 36, 0.05)';
+                elAdviceBox.innerHTML = `<div style="font-size:13px; color:var(--accent-orange); font-weight:800; margin-bottom:4px;"><i class="fa-solid fa-triangle-exclamation"></i> 活水枯竭警告</div><div style="font-size:13px; color:var(--text-main); line-height:1.5;">防禦資金低於 VIX:${vix.toFixed(1)} 所要求的數學底線！建議盡速補足 <span style="color:var(--accent-orange); font-weight:900; font-size:16px;">$${formatNum(shortage)}</span> 至活水庫。</div>`;
+            }
+        }
+    }
+
+    function runKellyScanner() {
+        let mu = parseFloat(document.getElementById('input-kelly-mu').value) / 100 || 0.08; let sigma = parseFloat(document.getElementById('input-kelly-sigma').value) / 100 || 0.18; let r = 0.025; let totalPledgeSum = 0; let totalCreditSum = 0; let weightedInterestSum = 0;
+        state.debts.forEach(d => { let p = parseFloat(d.principal) || 0; let rate = parseFloat(d.rate) || 0; weightedInterestSum += p * rate; if (d.type === 'pledge') totalPledgeSum += p; else if (d.type === 'credit') totalCreditSum += p; });
+        let totalDebt = totalPledgeSum + totalCreditSum; if (totalDebt > 0) r = (weightedInterestSum / totalDebt) / 100;
+        let kr = document.getElementById('input-kelly-rate'); if (kr) kr.value = (r * 100).toFixed(2);
+        state.kellyMu = mu * 100; state.kellySigma = sigma * 100; saveData();
+
+        let f_star = (mu - r) / (sigma * sigma); let f_star_pct = f_star * 100; let f_half_pct = f_star_pct / 2;
+        document.getElementById('kelly-result-container').style.display = 'block';
+        let elFull = document.getElementById('ui-kelly-full'); let elHalf = document.getElementById('ui-kelly-half'); let elAdvice = document.getElementById('ui-kelly-advice');
+
+        if (f_star <= 0) { elFull.innerText = '0%'; elHalf.innerText = '0%'; elAdvice.innerHTML = `<span style="color:var(--accent-red); font-weight:800;">⚠️ 警告：預期報酬竟低於您的借款成本！</span><br>在這種環境下，任何槓桿都會加速毀滅，數學最佳解為【完全不要開槓桿】。`; } 
+        else { elFull.innerText = f_star_pct.toFixed(1) + '%'; elHalf.innerText = f_half_pct.toFixed(1) + '%'; let max_g = r + Math.pow(mu - r, 2) / (2 * sigma * sigma); elAdvice.innerHTML = `理論極限：開到 <b style="color:var(--accent-blue);">${f_star_pct.toFixed(1)}%</b> 曝險可達最大財富成長率 (年化 <b style="color:var(--accent-green);">${(max_g*100).toFixed(2)}%</b>)。<br><span style="color:var(--text-sub); font-size:11px;">(實戰中為抵禦黑天鵝與波動耗損，專業機構通常採用 <b>Half-Kelly</b> 作為防禦基準)</span>`; }
+
+        let labels = []; let data = []; let pointColors = []; let pointRadiuses = [];
+        for (let i = 0; i <= 300; i += 5) { let frac = i / 100; let g = r + frac * (mu - r) - 0.5 * frac * frac * sigma * sigma; labels.push(i + '%'); data.push(g * 100); if (f_star > 0 && Math.abs(frac - f_star) < 0.03) { pointColors.push('#38bdf8'); pointRadiuses.push(5); } else { pointColors.push('#ec4899'); pointRadiuses.push(0); } }
+        let ctx = document.getElementById('kellyChart').getContext('2d'); if (charts.kelly) charts.kelly.destroy();
+        charts.kelly = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: '預期年化成長率 (CAGR %)', data: data, borderColor: '#ec4899', backgroundColor: 'rgba(236, 72, 153, 0.1)', borderWidth: 2, pointBackgroundColor: pointColors, pointRadius: pointRadiuses, fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, neonGlow: { enable: true, blur: 12 } }, scales: { y: { display: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8', maxTicksLimit: 8 } } }, interaction: { intersect: false, mode: 'index' } } });
+    }
+
+    function randn_bm() { let u = 0, v = 0; while(u === 0) u = Math.random(); while(v === 0) v = Math.random(); return Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v ); }
+
+    function runMonteCarlo() {
+        let currentNW = parseFloat(document.getElementById('ui-net-worth').getAttribute('data-val')) || 0;
+        let targetNW = parseFloat(state.targetNetWorth) || 10000000; 
+        let leverage = (parseFloat(document.getElementById('ui-exposure-ratio').getAttribute('data-val')) || 100) / 100;
+        if (isNaN(currentNW) || currentNW <= 0) return alert("指揮官，淨資產必須大於 0 才能啟動量子推演！");
+        let years = parseFloat(document.getElementById('mc-years').value) || 10; let mu = parseFloat(document.getElementById('mc-mu').value) / 100 || 0.08; let sigma = parseFloat(document.getElementById('mc-sigma').value) / 100 || 0.18; let pmt = parseFloat(document.getElementById('mc-pmt').value) || 0;
+        state.mcYears = years; state.mcMu = mu * 100; state.mcSigma = sigma * 100; state.mcPmt = pmt; saveData();
+
+        let borrowRate = parseFloat(document.getElementById('input-kelly-rate').value) / 100 || 0.025; let dt = 1/12; let months = years * 12;
+        let mu_L = leverage * mu - Math.max(0, leverage - 1) * borrowRate; let sigma_L = leverage * sigma; let drift = (mu_L - 0.5 * Math.pow(sigma_L, 2)) * dt; let vol = sigma_L * Math.sqrt(dt);
+        let successCount = 0; let ruinCount = 0; let finalWealths = []; let paths = [];
+        
+        for (let i = 0; i < 1000; i++) {
+            let W = currentNW; let path = [W]; let isRuin = false;
+            for (let m = 1; m <= months; m++) { let Z = randn_bm(); W = W * Math.exp(drift + vol * Z) + pmt; if (W <= currentNW * 0.2) { isRuin = true; while(path.length <= months) path.push(0); break; } path.push(W); }
+            let finalW = isRuin ? 0 : path[path.length - 1]; finalWealths.push(finalW); if (isRuin) ruinCount++; else if (finalW >= targetNW) successCount++; if (i < 50) paths.push(path);
+        }
+        
+        finalWealths.sort((a,b) => a - b); let medianW = finalWealths[Math.floor(finalWealths.length / 2)]; let successProb = (successCount / 1000) * 100; let ruinProb = (ruinCount / 1000) * 100;
+        document.getElementById('mc-result-container').style.display = 'block'; 
+        
+        animateNumber('mc-success-prob', successProb, '', '%', 1);
+        animateNumber('mc-ruin-prob', ruinProb, '', '%', 1);
+        animateNumber('mc-median-w', medianW, '$');
+        
+        let ctx = document.getElementById('mcChart').getContext('2d'); if (charts.mc) charts.mc.destroy();
+        let labels = Array.from({length: months + 1}, (_, i) => i); let datasets = paths.map(p => ({ data: p, borderColor: 'rgba(236, 72, 153, 0.15)', borderWidth: 1, pointRadius: 0, fill: false })); datasets.push({ label: '目標淨資產', data: Array(months + 1).fill(targetNW), borderColor: '#34d399', borderWidth: 2, borderDash: [5, 5], pointRadius: 0, fill: false });
+        charts.mc = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: datasets }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, neonGlow: { enable: true, blur: 5 } }, scales: { y: { display: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { display: false } }, animation: { duration: 1500, easing: 'easeOutQuart' } } });
+    }
+
+    function runSniperDCA() {
+        let valStr = document.getElementById('input-sniper-funds').value; let newFunds = parseFloat(valStr); let container = document.getElementById('sniper-result-container');
+        if (isNaN(newFunds) || newFunds <= 0) { container.style.display = 'none'; return; }
+
+        let safeLine = state.dynamicSafeLine || 0; let currentCash = state.cash || 0; let cashShortage = Math.max(0, safeLine - currentCash);
+        let allocateCash = 0; let allocate2X = 0; let allocate1X = 0; let remaining = newFunds;
+
+        if (cashShortage > 0) { allocateCash = Math.min(remaining, cashShortage); remaining -= allocateCash; }
+        if (remaining > 0) {
+            let totalInv = 0; let totalExp = 0;
+            state.stocks.forEach(s => { let val = (parseFloat(s.shares)||0) * (parseFloat(s.price)||0); let mult = s.mult !== undefined ? parseFloat(s.mult) : 1; totalInv += val; totalExp += (val * mult); });
+            state.funds.forEach(f => { let val = (parseFloat(f.value)||0); let mult = f.mult !== undefined ? parseFloat(f.mult) : 1; totalInv += val; totalExp += (val * mult); });
+            let totalDebt = state.debts.reduce((s, d) => s + (parseFloat(d.principal)||0), 0);
+            let newNW = (totalInv + currentCash + newFunds) - totalDebt; let targetExp = newNW * ((state.effectiveTargetRatio || 100) / 100); let expGap = targetExp - totalExp;
+
+            if (expGap >= remaining * 2) { allocate2X = remaining; } else if (expGap > remaining) { allocate2X = expGap - remaining; allocate1X = remaining - allocate2X; } else if (expGap > 0) { allocate1X = expGap; allocateCash += (remaining - expGap); } else { allocateCash += remaining; }
+        }
+
+        let price2X = parseFloat(state.stocks.find(s => ((s.code || '').trim()).toUpperCase() === '00631L')?.price) || 0; let price1X = parseFloat(state.stocks.find(s => ((s.code || '').trim()).toUpperCase() === '0050')?.price) || 0;
+        let shares2X = price2X > 0 ? Math.floor(allocate2X / price2X) : 0; let shares1X = price1X > 0 ? Math.floor(allocate1X / price1X) : 0;
+        let html = '';
+
+        if (allocateCash > 0) html += `<div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;"><div><i class="fa-solid fa-water" style="color:var(--accent-blue); margin-right:6px;"></i>注入防禦活水庫存</div><div style="font-weight: 800; color: var(--accent-blue); font-size:16px;">$${formatNum(allocateCash)}</div></div>`;
+        if (allocate2X > 0) html += `<div style="background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap;"><div><i class="fa-solid fa-fire" style="color:var(--accent-pink); margin-right:6px;"></i>火力佈署 (如 00631L) ${price2X > 0 ? `<span style="font-size:11px; color:var(--text-sub); margin-left:6px;">(約 ${Math.floor(shares2X/1000)} 張 + ${shares2X%1000} 零股)</span>` : `<span style="font-size:11px; color:var(--text-sub); margin-left:6px;">(建議購買 2X 槓桿資產)</span>`}</div><div style="font-weight: 800; color: var(--accent-pink); font-size:16px;">$${formatNum(allocate2X)}</div></div>`;
+        if (allocate1X > 0) html += `<div style="background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap;"><div><i class="fa-solid fa-leaf" style="color:var(--accent-green); margin-right:6px;"></i>平穩推進 (如 0050) ${price1X > 0 ? `<span style="font-size:11px; color:var(--text-sub); margin-left:6px;">(約 ${Math.floor(shares1X/1000)} 張 + ${shares1X%1000} 零股)</span>` : `<span style="font-size:11px; color:var(--text-sub); margin-left:6px;">(建議購買 1X 原型資產)</span>`}</div><div style="font-weight: 800; color: var(--accent-green); font-size:16px;">$${formatNum(allocate1X)}</div></div>`;
+
+        container.innerHTML = `<div style="font-size:13px; font-weight:800; color:var(--text-main); margin-bottom:12px;"><i class="fa-solid fa-microchip"></i> 系統最佳化資金分配協議：</div>` + html; container.style.display = 'block';
+    }
+
+    function checkAndRenderQuests(netWorth, runwayMonths, debtRatio, ratioRaw) {
+        if (!state.achievements) state.achievements = {}; let newUnlocks = [];
+        if (state.history.length > 0 && !state.achievements.first_blood) { state.achievements.first_blood = true; newUnlocks.push('🌱 啟航者 (完成第一筆快照)'); }
+        if (netWorth >= 1000000 && !state.achievements.nw_1m) { state.achievements.nw_1m = true; newUnlocks.push('💰 百萬將鋒 (淨資產突破 100 萬)'); }
+        if (netWorth >= 5000000 && !state.achievements.nw_5m) { state.achievements.nw_5m = true; newUnlocks.push('🚀 半息巡航 (淨資產突破 500 萬)'); }
+        if (runwayMonths >= 6 && !state.achievements.runway_6m) { state.achievements.runway_6m = true; newUnlocks.push('🛡️ 防禦大師 (活水防禦破 6 個月)'); }
+        if (debtRatio < 30 && debtRatio > 0 && !state.achievements.debt_light) { state.achievements.debt_light = true; newUnlocks.push('🪶 無重力 (總負債比降至 30% 以下)'); }
+        
+        let isPerfectExp = Math.abs(ratioRaw - state.effectiveTargetRatio) < 1.0; let hasAssets = (state.stocks.length > 0 || state.funds.length > 0) && netWorth > 0;
+        if (hasAssets && isPerfectExp && !state.achievements.perfect_exp) { state.achievements.perfect_exp = true; newUnlocks.push('⚖️ 絕對精準 (實際曝險與目標誤差 < 1%)'); }
+
+        if (isAppReady && newUnlocks.length > 0) { triggerConfetti(); setTimeout(() => { alert("🎉 恭喜指揮官！解鎖新成就：\n\n" + newUnlocks.join("\n")); }, 500); }
+
+        if(state.achievements.first_blood) document.getElementById('badge-first').classList.add('unlocked');
+        if(state.achievements.nw_1m) document.getElementById('badge-1m').classList.add('unlocked');
+        if(state.achievements.nw_5m) document.getElementById('badge-5m').classList.add('unlocked');
+        if(state.achievements.runway_6m) document.getElementById('badge-runway').classList.add('unlocked');
+        if(state.achievements.debt_light) document.getElementById('badge-debt').classList.add('unlocked');
+        if(state.achievements.perfect_exp) document.getElementById('badge-precise').classList.add('unlocked');
+
+        let nextMilestone = 100000;
+        if (netWorth >= 10000000) nextMilestone = 50000000; else if (netWorth >= 5000000) nextMilestone = 10000000; else if (netWorth >= 3000000) nextMilestone = 5000000; else if (netWorth >= 1000000) nextMilestone = 3000000; else if (netWorth >= 500000) nextMilestone = 1000000; else if (netWorth >= 100000) nextMilestone = 500000;
+
+        let mainPct = Math.min(100, Math.max(0, (netWorth / nextMilestone) * 100)); let uiMainQuest = document.getElementById('ui-current-main-quest');
+        if (uiMainQuest) { uiMainQuest.innerHTML = `<div style="font-size:13px; font-weight:800; color:var(--accent-orange); margin-bottom:6px;"><i class="fa-solid fa-flag-checkered"></i> [主線] 晉升階級：淨資產突破 ${formatNum(nextMilestone)}</div><div style="font-size:11px; color:var(--text-sub); margin-bottom:6px;">目前進度：${formatNum(netWorth)} / ${formatNum(nextMilestone)} (${mainPct.toFixed(1)}%)</div><div class="vs-bar-container" style="height:8px; margin:0; background:var(--input-bg);"><div style="background:var(--accent-orange); height:100%; width:${mainPct}%; transition: width 0.5s ease; box-shadow: 0 0 10px rgba(251,191,36,0.5);"></div></div>`; }
+
+        let sideQuestsHTML = '';
+        let q1Pct = Math.min(100, (runwayMonths / 6) * 100); let q1Status = runwayMonths >= 6 ? 'completed' : ''; let q1Icon = runwayMonths >= 6 ? '<i class="fa-solid fa-circle-check" style="color:var(--accent-green);"></i>' : '<i class="fa-regular fa-circle" style="color:var(--text-sub);"></i>';
+        sideQuestsHTML += `<div class="quest-card ${q1Status}"><div class="quest-title">${q1Icon} 銅牆鐵壁 <span style="font-size:12px; font-weight:700; color:${runwayMonths >= 6 ? 'var(--accent-green)' : 'var(--text-sub)'};">${runwayMonths > 99 ? 'MAX' : runwayMonths.toFixed(1)} / 6.0月</span></div><div class="quest-desc">將活水續航力提升至 6 個月以上，獲得「防禦大師」徽章。</div><div class="vs-bar-container" style="height:4px; margin:0; border:none; background:rgba(255,255,255,0.1);"><div style="background:var(--accent-green); height:100%; width:${q1Pct}%;"></div></div></div>`;
+
+        let q2Pct = debtRatio <= 0 ? 100 : (debtRatio >= 100 ? 0 : Math.min(100, Math.max(0, (100 - debtRatio) / (100 - 30) * 100))); let q2Status = (debtRatio < 30 && debtRatio > 0) ? 'completed' : ''; let q2Icon = (debtRatio < 30 && debtRatio > 0) ? '<i class="fa-solid fa-circle-check" style="color:var(--accent-green);"></i>' : '<i class="fa-regular fa-circle" style="color:var(--text-sub);"></i>';
+        sideQuestsHTML += `<div class="quest-card ${q2Status}"><div class="quest-title">${q2Icon} 擺脫重力 <span style="font-size:12px; font-weight:700; color:${debtRatio < 30 ? 'var(--accent-green)' : 'var(--text-sub)'};">${debtRatio.toFixed(1)}% / < 30%</span></div><div class="quest-desc">在保有槓桿的前提下，將總負債比壓縮至 30% 以下。</div><div class="vs-bar-container" style="height:4px; margin:0; border:none; background:rgba(255,255,255,0.1);"><div style="background:var(--accent-blue); height:100%; width:${debtRatio === 0 ? 0 : q2Pct}%;"></div></div></div>`;
+
+        let expDiff = Math.abs(ratioRaw - state.effectiveTargetRatio); let q3Pct = Math.max(0, 100 - (expDiff * 5)); let q3Status = isPerfectExp && hasAssets ? 'completed' : ''; let q3Icon = isPerfectExp && hasAssets ? '<i class="fa-solid fa-circle-check" style="color:var(--accent-green);"></i>' : '<i class="fa-regular fa-circle" style="color:var(--text-sub);"></i>';
+        sideQuestsHTML += `<div class="quest-card ${q3Status}"><div class="quest-title">${q3Icon} 精準操盤 <span style="font-size:12px; font-weight:700; color:${isPerfectExp ? 'var(--accent-green)' : 'var(--text-sub)'};">誤差 ${expDiff.toFixed(1)}%</span></div><div class="quest-desc">完美執行再平衡，使實際曝險與目標曝險誤差小於 1%。</div><div class="vs-bar-container" style="height:4px; margin:0; border:none; background:rgba(255,255,255,0.1);"><div style="background:var(--accent-purple); height:100%; width:${hasAssets ? q3Pct : 0}%;"></div></div></div>`;
+
+        let uiSideQuests = document.getElementById('ui-side-quests'); if (uiSideQuests) uiSideQuests.innerHTML = sideQuestsHTML;
+    }
+
+    function updateTotals() {
+        let totalCashSum = state.accounts.reduce((sum, acc) => { let mult = acc.currency === 'USD' ? (parseFloat(usdTwdRate) || 32.5) : 1; return sum + ((parseFloat(acc.balance) || 0) * mult); }, 0);
+        state.cash = totalCashSum; 
+        
+        animateNumber('ui-total-cash-sum', totalCashSum);
+        animateNumber('ui-cashflow-cash', totalCashSum, '$');
+
+        let totalPledgeSum = 0; let totalCreditSum = 0; let monthlyPledgeInterest = 0; let monthlyCreditPMT = 0; let weightedInterestSum = 0; 
+        state.debts.forEach(d => { let p = parseFloat(d.principal) || 0; let r = parseFloat(d.rate) || 0; let t = parseFloat(d.term) || 0; weightedInterestSum += p * r; if (d.type === 'pledge') { totalPledgeSum += p; monthlyPledgeInterest += (p * (r / 100)) / 12; } else if (d.type === 'credit') { totalCreditSum += p; monthlyCreditPMT += calculatePMT(p, r, t); } });
+
+        let livingExpNum = parseFloat(state.livingExpense) || 0; let totalMonthlyOutflow = monthlyPledgeInterest + monthlyCreditPMT + livingExpNum; let annualOutflow = totalMonthlyOutflow * 12;
+        let totalDebt = totalPledgeSum + totalCreditSum; let avgRate = totalDebt > 0 ? (weightedInterestSum / totalDebt) : 2.5;
+
+        let kr = document.getElementById('input-kelly-rate'); if (kr && document.activeElement !== kr) { kr.value = avgRate.toFixed(2); }
+        
+        animateNumber('ui-total-debt-sum', totalDebt);
+        animateNumber('ui-cashflow-pledge', totalPledgeSum, '$');
+        animateNumber('ui-cashflow-credit', totalCreditSum, '$');
+        animateNumber('ui-monthly-pledge-interest', monthlyPledgeInterest, '-$');
+        animateNumber('ui-monthly-credit-pmt', monthlyCreditPMT, '-$');
+        animateNumber('ui-monthly-total-outflow', totalMonthlyOutflow, '-$');
+
+        let totalInv = 0, totalExp = 0, v1x = 0, v2x = 0, v0x = 0; let collateralTotal = 0; 
+        state.stocks.forEach(s => { let val = (parseFloat(s.shares) || 0) * (parseFloat(s.price) || 0); let mult = s.mult !== undefined ? parseFloat(s.mult) : 1; totalInv += val; totalExp += (val * mult); if(mult == 2) v2x += val; else if(mult == 1) v1x += val; else v0x += val; if (s.isCollateral) collateralTotal += val; });
+        state.funds.forEach(f => { let val = parseFloat(f.value) || 0; let mult = f.mult !== undefined ? parseFloat(f.mult) : 1; totalInv += val; totalExp += (val * mult); if(mult == 2) v2x += val; else if(mult == 1) v1x += val; else v0x += val; if (f.isCollateral) collateralTotal += val; });
+        state.collateral = collateralTotal; let colEl = document.getElementById('input-collateral'); if(colEl) colEl.value = Math.round(collateralTotal);
+
+        let netWorth = (totalInv + totalCashSum) - totalDebt; let ratioRaw = netWorth > 0 ? (totalExp / netWorth) * 100 : 0;
+        
+        animateNumber('ui-total-inv', totalInv, '$');
+        animateNumber('ui-total-exp', totalExp, '$');
+        animateNumber('ui-net-worth', netWorth, '$');
+        animateNumber('ui-exposure-ratio', ratioRaw, '', '%', 2); 
+
+        let totalAssetsPool = totalInv + totalCashSum; let cashPct = totalAssetsPool > 0 ? (totalCashSum / totalAssetsPool) * 100 : 0; let invPct = totalAssetsPool > 0 ? (totalInv / totalAssetsPool) * 100 : 0; let debtRatio = totalAssetsPool > 0 ? (totalDebt / totalAssetsPool) * 100 : 0;
+
+        let elDebtRatio = document.getElementById('ui-debt-ratio');
+        if (elDebtRatio) { let debtStatus = debtRatio < 50 ? '穩定' : (debtRatio > 70 ? '危險' : '當心'); let debtColor = debtRatio < 50 ? 'var(--accent-green)' : (debtRatio > 70 ? 'var(--accent-red)' : 'var(--accent-orange)'); elDebtRatio.innerHTML = `${debtRatio.toFixed(1)}% <span style="font-size:11px; margin-left:6px; padding:2px 6px; border-radius:6px; border:1px solid ${debtColor}; background:transparent;">${debtStatus}</span>`; elDebtRatio.style.color = debtColor; }
+
+        let currentAssets = totalCashSum + totalInv; let currentLiabilities = totalPledgeSum + annualOutflow; 
+        let elCurrentRatio = document.getElementById('ui-current-ratio'); let currentRatio = currentLiabilities > 0 ? (currentAssets / currentLiabilities) : Infinity; 
+        if (elCurrentRatio) { if (currentLiabilities === 0) { elCurrentRatio.innerHTML = '無短期負債 <span style="font-size:11px; margin-left:6px; padding:2px 6px; border-radius:6px; border:1px solid var(--accent-green); background:transparent;">健康</span>'; elCurrentRatio.style.color = 'var(--accent-green)'; } else { let currStatus = currentRatio > 3 ? '健康' : (currentRatio < 2 ? '危險' : '注意'); let currColor = currentRatio > 3 ? 'var(--accent-green)' : (currentRatio < 2 ? 'var(--accent-red)' : 'var(--accent-orange)'); elCurrentRatio.innerHTML = `${currentRatio.toFixed(2)} <span style="font-size:11px; margin-left:6px; padding:2px 6px; border-radius:6px; border:1px solid ${currColor}; background:transparent;">${currStatus}</span>`; elCurrentRatio.style.color = currColor; } }
+
+        animateNumber('ui-bar-cash-pct', cashPct, '', '%', 1);
+        animateNumber('ui-bar-inv-pct', invPct, '', '%', 1);
+        animateNumber('ui-bar-cash-amt', totalCashSum, '$');
+        animateNumber('ui-bar-inv-amt', totalInv, '$');
+        
+        let elCashFill = document.getElementById('ui-bar-cash-fill'); if (elCashFill) elCashFill.style.width = cashPct + '%'; 
+        let elInvFill = document.getElementById('ui-bar-inv-fill'); if (elInvFill) elInvFill.style.width = invPct + '%';
+        
+        let targetNW = parseFloat(state.targetNetWorth) || 10000000; let progressPct = netWorth > 0 ? Math.min(100, Math.max(0, (netWorth / targetNW) * 100)) : 0;
+        let msPctEl = document.getElementById('ui-milestone-percent'); if(msPctEl) msPctEl.innerText = progressPct.toFixed(1) + '%'; let barEl = document.getElementById('ui-progress-bar'); if(barEl) barEl.style.width = progressPct + '%';
+
+        if (state.autoGlidepath) { let maxE = parseFloat(state.glideMax) || 200; let minE = parseFloat(state.glideMin) || 100; state.targetRatio = Math.round(maxE - ((maxE - minE) * (progressPct / 100))); animateNumber('ui-glide-calculated', state.targetRatio, '', '%'); }
+
+        let dampenAmount = 0; let dampenerActive = false;
+        if (state.autoDampener) {
+            let bias = parseFloat(state.biasRatio) || 0; if (bias >= 15) { dampenAmount = 30; dampenerActive = true; } else if (bias >= 10) { dampenAmount = 20; dampenerActive = true; } else if (bias >= 5) { dampenAmount = 10; dampenerActive = true; }
+            let statusBox = document.getElementById('dampener-status-box');
+            if (statusBox) { if (dampenerActive) { statusBox.style.background = 'rgba(248, 113, 113, 0.1)'; statusBox.style.border = '1px dashed var(--accent-red)'; statusBox.innerHTML = `<span style="color:var(--accent-red); font-weight:800;"><i class="fa-solid fa-fire-flame-curved"></i> 市場過熱！觸發減震</span><br><div style="margin-top:6px; font-size:13px; color:var(--text-main);">目標曝險強制下調 <b style="font-size:16px;">-${dampenAmount}%</b></div>`; } else if (bias < 0) { statusBox.style.background = 'rgba(56, 189, 248, 0.1)'; statusBox.style.border = '1px dashed var(--accent-blue)'; statusBox.innerHTML = `<span style="color:var(--accent-blue); font-weight:800;"><i class="fa-solid fa-snowflake"></i> 負乖離 / 降溫中</span><br><div style="margin-top:6px; font-size:13px; color:var(--text-main);">未達觸發門檻，維持原目標</div>`; } else { statusBox.style.background = 'rgba(52, 211, 153, 0.1)'; statusBox.style.border = '1px dashed var(--accent-green)'; statusBox.innerHTML = `<span style="color:var(--accent-green); font-weight:800;"><i class="fa-solid fa-temperature-empty"></i> 溫度正常</span><br><div style="margin-top:6px; font-size:13px; color:var(--text-main);">未達觸發門檻，維持原目標</div>`; } }
+        }
+        
+        state.effectiveTargetRatio = Math.max(0, state.targetRatio - dampenAmount);
+        let slider = document.getElementById('input-target-ratio-slider'); if(slider) slider.value = state.targetRatio;
+        let sliderText = document.getElementById('ui-target-ratio-text'); if(sliderText) { if (dampenerActive) { sliderText.innerHTML = `<span style="text-decoration:line-through; color:var(--text-sub); font-size:15px; opacity:0.7;">${state.targetRatio}</span> <span style="color:var(--accent-red); text-shadow:0 0 8px rgba(248,113,113,0.5); font-size:22px;">${state.effectiveTargetRatio}</span>`; } else { sliderText.innerText = state.targetRatio; } }
+
+        let inLivingExp = document.getElementById('input-living-expense'); if(inLivingExp && document.activeElement !== inLivingExp) inLivingExp.value = state.livingExpense;
+        
+        let runwayEl = document.getElementById('ui-cash-runway'); let runwayContainer = document.getElementById('ui-cash-runway-container');
+        let runwayMonths = totalMonthlyOutflow > 0 ? (totalCashSum / totalMonthlyOutflow) : 999;
+
+        if (totalMonthlyOutflow > 0) {
+            runwayEl.innerText = runwayMonths.toFixed(1) + ' 個月';
+            if(runwayMonths < 6) { runwayEl.style.color = 'var(--accent-red)'; if(runwayContainer) runwayContainer.style.background = 'rgba(248, 113, 113, 0.1)'; } 
+            else if(runwayMonths < 12) { runwayEl.style.color = 'var(--accent-orange)'; if(runwayContainer) runwayContainer.style.background = 'rgba(251, 191, 36, 0.1)'; } 
+            else { runwayEl.style.color = 'var(--accent-green)'; if(runwayContainer) runwayContainer.style.background = 'rgba(52, 211, 153, 0.1)'; }
+        } else { runwayEl.innerText = '燃料充足 (無流出)'; runwayEl.style.color = 'var(--accent-green)'; if(runwayContainer) runwayContainer.style.background = 'rgba(52, 211, 153, 0.1)'; }
+
+        let marginRatio = totalPledgeSum > 0 ? (collateralTotal / totalPledgeSum) * 100 : 999; let marginEl = document.getElementById('ui-margin-ratio');
+        if(marginEl) {
+            if(totalPledgeSum === 0) { marginEl.innerText = "無借款"; marginEl.style.color = "var(--text-sub)"; marginEl.style.textShadow = "none"; document.getElementById('ui-margin-drop').innerText = "--"; } 
+            else { marginEl.innerText = marginRatio.toFixed(1) + "%"; marginEl.style.color = marginRatio < 140 ? "var(--accent-red)" : (marginRatio < 165 ? "var(--accent-orange)" : "var(--accent-green)"); marginEl.style.textShadow = marginRatio < 140 ? "0 0 10px rgba(248,113,113,0.5)" : "none"; let dropToMarginCall = marginRatio > 130 ? (1 - (1.3 * totalPledgeSum / collateralTotal)) * 100 : 0; document.getElementById('ui-margin-drop').innerText = dropToMarginCall > 0 ? "-" + dropToMarginCall.toFixed(1) + "%" : "已達斷頭標準"; }
+        }
+
+        let stressPct = parseInt(document.getElementById('stress-slider').value) / 100; let newNetWorth = (v1x * (1 - stressPct) + v2x * Math.max(0, (1 - (stressPct * 2))) + v0x + totalCashSum) - totalDebt; let newTotalExp = (v1x * (1 - stressPct)) + (v2x * Math.max(0, (1 - (stressPct * 2))) * 2);
+        
+        animateNumber('stress-networth', newNetWorth, '$');
+        animateNumber('stress-exposure', (newNetWorth > 0 ? (newTotalExp / newNetWorth) * 100 : 0), '', '%', 1);
+
+        let badge = document.getElementById('ui-status-badge');
+        if (badge) { if (ratioRaw <= 120) { badge.style.background = "rgba(52, 211, 153, 0.15)"; badge.style.color = "var(--accent-green)"; badge.innerText = "安全巡航"; } else if (ratioRaw <= 180) { badge.style.background = "rgba(251, 191, 36, 0.15)"; badge.style.color = "var(--accent-orange)"; badge.innerText = "優化水位"; } else { badge.style.background = "rgba(248, 113, 113, 0.15)"; badge.style.color = "var(--accent-red)"; badge.innerText = "高壓槓桿"; } }
+        
+        let apiStatusEl = document.getElementById('ui-api-status'); if(apiStatusEl) apiStatusEl.innerText = "最新同步: " + state.lastSyncTime;
+        if(charts.radar) { charts.radar.data.datasets[0].data = [v1x, v2x * 2, totalCashSum + v0x]; charts.radar.update(); }
+
+        updateDynamicBuffer(totalCashSum, totalMonthlyOutflow, totalDebt, state.vix);
+        updateFleetStatus(netWorth); updateDrawdown(netWorth); updateSimulator(netWorth, totalExp, ratioRaw); 
+        checkAndRenderQuests(netWorth, runwayMonths, debtRatio, ratioRaw);
+
+        let marginStr = totalPledgeSum === 0 ? "無借款" : `${marginRatio.toFixed(1)}%`; let liquidityStr = currentLiabilities === 0 ? "無短期負債" : `${currentRatio.toFixed(2)}`;
+        let defconStatus = document.body.classList.contains('defcon-1') ? "⚠️ DEFCON 1: 強制啟動再平衡程序的警告" : (document.body.classList.contains('defcon-3') ? "🟡 DEFCON 3: 警戒狀態" : "🟢 安全巡航");
+        let tickerText = `🟢 VIX: ${state.vix.toFixed(1)} ｜ 🚀 曝險: ${ratioRaw.toFixed(2)}% ｜ 🛡️ 維持率: ${marginStr} ｜ 💧 流動比: ${liquidityStr} ｜ ${defconStatus} ｜ 💰 淨資產: $${formatNum(netWorth)} \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0`;
+        let elTicker = document.getElementById('ui-ticker-text'); if (elTicker) elTicker.innerText = tickerText.repeat(3); 
+        
+        let elChronos = document.getElementById('ui-chronos-display');
+        if (elChronos) {
+            try {
+                let targetNWText = document.getElementById('ui-target-networth-txt'); if(targetNWText) targetNWText.innerText = formatNum(targetNW);
+                if (netWorth >= targetNW) { elChronos.innerHTML = '<span style="color:var(--accent-green); font-size:20px;"><i class="fa-solid fa-rocket"></i> 奇異點已突破！歡迎來到自由宇宙！</span>'; } 
+                else {
+                    let leverage = netWorth > 0 ? totalExp / netWorth : 1; let mu = (parseFloat(state.mcMu) || 8.0) / 100; let sigma = (parseFloat(state.mcSigma) || 18.0) / 100; let borrowRate = avgRate / 100; let pmt = parseFloat(state.mcPmt) || 0;
+                    let cagr = (leverage * mu - Math.max(0, leverage - 1) * borrowRate) - 0.5 * Math.pow(leverage * sigma, 2);
+                    let monthsToFIRE = 0; let isInfinity = false;
+
+                    if (cagr <= 0) { if (pmt > 0) { monthsToFIRE = (targetNW - netWorth) / pmt; } else { isInfinity = true; } } 
+                    else {
+                        let r_monthly = Math.pow(1 + cagr, 1/12) - 1;
+                        if (pmt === 0 && netWorth <= 0) { isInfinity = true; } 
+                        else { let fvTerm = targetNW * r_monthly + pmt; let pvTerm = netWorth * r_monthly + pmt; if (pvTerm <= 0) { isInfinity = true; } else { monthsToFIRE = Math.log(fvTerm / pvTerm) / Math.log(1 + r_monthly); } }
+                    }
+
+                    if (isInfinity || monthsToFIRE < 0 || isNaN(monthsToFIRE)) { elChronos.innerHTML = '<span class="chronos-alert"><i class="fa-solid fa-triangle-exclamation"></i> 航線偏移：目前動能不足以抵達奇異點</span>'; } 
+                    else {
+                        let y = Math.floor(monthsToFIRE / 12); let m = Math.floor(monthsToFIRE % 12); let d = Math.floor((monthsToFIRE - Math.floor(monthsToFIRE)) * 30.44); 
+                        let html = ''; if(y > 0) html += `<span>${y}</span><span class="chronos-unit">年</span>`; if(m > 0 || y > 0) html += `<span>${m}</span><span class="chronos-unit">個月</span>`; html += `<span>${d}</span><span class="chronos-unit">天</span>`;
+                        if (y > 100) html = '<span style="font-size:18px;">🌌 旅程超過 100 年 (建議加大槓桿或投入)</span>'; elChronos.innerHTML = html;
+                    }
+                }
+            } catch(e) { elChronos.innerHTML = '<span class="chronos-alert">運算異常，請檢查核心參數</span>'; }
+        }
+
+        runSniperDCA(); updateSubCharts(); saveData();
+    }
+
+    function updateSimulator(netWorth, totalExp, currentPct) {
+        let targetPct = parseFloat(state.effectiveTargetRatio) || 100; let tolerance = parseFloat(state.toleranceRatio) || 5; let gap = (netWorth * (targetPct / 100)) - totalExp; let price631L = parseFloat(state.stocks.find(s => ((s.code || '').trim()).toUpperCase() === '00631L')?.price) || 0;
+        let dev = Math.abs(currentPct - targetPct); let defconLevel = 5; if (dev >= tolerance) defconLevel = 1; else if (dev >= tolerance * 0.5) defconLevel = 3;
+
+        document.body.classList.remove('defcon-1', 'defcon-3', 'defcon-5'); document.body.classList.add(`defcon-${defconLevel}`);
+        let defconBadge = document.getElementById('ui-defcon-badge');
+        if (defconBadge) {
+            if (defconLevel === 1) { defconBadge.innerHTML = '<span style="color:var(--accent-red);"><i class="fa-solid fa-triangle-exclamation"></i> DEFCON 1 (戰鬥準備)</span>'; defconBadge.style.borderColor = 'var(--accent-red)'; defconBadge.style.background = 'rgba(248,113,113,0.15)'; } 
+            else if (defconLevel === 3) { defconBadge.innerHTML = '<span style="color:var(--accent-orange);"><i class="fa-solid fa-bell"></i> DEFCON 3 (警戒狀態)</span>'; defconBadge.style.borderColor = 'var(--accent-orange)'; defconBadge.style.background = 'rgba(251,191,36,0.15)'; } 
+            else { defconBadge.innerHTML = '<span style="color:var(--accent-green);"><i class="fa-solid fa-shield-check"></i> DEFCON 5 (和平巡航)</span>'; defconBadge.style.borderColor = 'var(--accent-green)'; defconBadge.style.background = 'rgba(52,211,153,0.15)'; }
+        }
+
+        let res = document.getElementById('simulator-result'); if (!res) return;
+        if (netWorth <= 0) { res.innerHTML = '<div style="color:var(--text-sub); text-align:center;">請先設定資金核心庫存。</div>'; return; }
+        if (defconLevel !== 1) { res.innerHTML = `<div style="background: rgba(52, 211, 153, 0.05); border: 1px dashed var(--accent-green); padding: 18px; border-radius: 12px; text-align:center;"><div style="font-size:24px; margin-bottom:8px; text-shadow:0 0 10px var(--accent-green);">🛡️</div><div style="color:var(--accent-green); font-weight:800; font-size:16px; margin-bottom:6px;">曝險處於安全容忍區間</div><div style="color:var(--text-sub); font-size:13px; font-weight:600; line-height:1.5;">維持紀律，防禦摩擦成本損耗。</div></div>`; return; }
+
+        let shares = price631L > 0 ? Math.round(Math.abs(gap / 2) / price631L) : 0; let lots = Math.floor(shares / 1000); let odd = shares % 1000;
+        let terminalBox = shares > 0 ? `<div class="terminal-box"><div class="terminal-header"><i class="fa-solid fa-terminal"></i> ACTION REQUIRED</div><div class="terminal-cmd">👉 ${gap > 0 ? '買進' : '賣出'} 00631L 共 <span style="color:${gap > 0 ? 'var(--accent-green)' : 'var(--accent-red)'}; font-size:20px;">${shares.toLocaleString()}</span> 股</div><div style="font-size: 12px; color: var(--text-sub); margin-top: 4px;">(自動拆單：${lots} 張 + ${odd} 零股)</div></div>` : '';
+
+        if (gap > 0) { res.innerHTML = `<div style="font-size:14px; color:var(--text-sub); margin-bottom:12px; font-weight:600;">已跌破防線，距離目標尚差 <span class="blur-target" style="color:var(--text-main); font-weight:800;">$${formatNum(gap)}</span> 曝險缺口：</div><div style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 12px; border:1px solid var(--border-color); margin-bottom: 12px;"><div style="font-size:13px; color:var(--accent-blue); font-weight:800;">💡 戰術：動用活水庫買進正2 (需資金 <span class="blur-target">$${formatNum(gap/2)}</span>)</div>${terminalBox}</div>`; } 
+        else { res.innerHTML = `<div style="font-size:15px; color:var(--text-main); margin-bottom:10px; font-weight:800;">當前總曝險已突破上限</div><div style="background: rgba(248, 113, 113, 0.05); padding: 15px; border-radius: 12px; border:1px dashed var(--accent-red);"><div style="font-size:15px; font-weight:700; color:var(--text-main);">💡 建議落袋結清賣出正2，收回資金 <span class="blur-target" style="color:var(--accent-red); font-weight:900;">$${formatNum(Math.abs(gap/2))}</span></div>${terminalBox}</div>`; }
+    }
+
+    function updateSubCharts() {
+        try {
+            let groupedStocks = {}; let stockTotal = 0;
+            state.stocks.forEach(s => { let code = s.code || '未命名'; let val = (parseFloat(s.shares)||0) * (parseFloat(s.price)||0); if(val>0){ groupedStocks[code] = (groupedStocks[code]||0) + val; stockTotal += val; }});
+            let groupedFunds = {}; let fundTotal = 0;
+            state.funds.forEach(f => { let name = f.name || '未命名'; let val = parseFloat(f.value)||0; if(val>0){ groupedFunds[name] = (groupedFunds[name]||0) + val; fundTotal += val; }});
+
+            if (charts.stock) {
+                charts.stock.data.labels = Object.keys(groupedStocks);
+                charts.stock.data.datasets[0].data = Object.values(groupedStocks);
+                charts.stock.update();
+            }
+            if (charts.fund) {
+                charts.fund.data.labels = Object.keys(groupedFunds);
+                charts.fund.data.datasets[0].data = Object.values(groupedFunds);
+                charts.fund.update();
+            }
+        } catch(e) {}
+    }
+
+    function updateStateValue(key, val) { state[key] = parseFloat(val) || 0; updateTotals(); }
+    function updateTargetRatio(val) { state.targetRatio = parseFloat(val) || 100; updateTotals(); }
+    function updateToleranceRatio(val) { state.toleranceRatio = parseFloat(val) || 5; updateTotals(); }
+    function updateStress(val) { document.getElementById('stress-val').innerText = val; updateTotals(); }
+
+    function initCharts() {
+        try {
+            Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = '-apple-system, sans-serif';
+            
+            const tooltipOpt = { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#38bdf8', bodyColor: '#f8fafc', borderColor: 'rgba(56, 189, 248, 0.3)', borderWidth: 1, padding: 10, cornerRadius: 8, displayColors: true };
+            const neonGlowPlugin = { id: 'neonGlow', beforeDatasetsDraw(chart, args, options) { if (!options.enable) return; const ctx = chart.ctx; chart.data.datasets.forEach((dataset, i) => { const meta = chart.getDatasetMeta(i); if (meta.hidden) return; ctx.save(); ctx.shadowColor = dataset.borderColor; ctx.shadowBlur = options.blur || 10; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }); }, afterDatasetsDraw(chart) { chart.ctx.restore(); } };
+            Chart.register(neonGlowPlugin);
+
+            if (document.getElementById('radarChart')) {
+                charts.radar = new Chart(document.getElementById('radarChart').getContext('2d'), { type: 'doughnut', data: { labels: ['原型防禦 (1X)', '戰術火炮 (2X)', '活水庫存 (0X)'], datasets: [{ data: [0, 0, 0], backgroundColor: ['rgba(52, 211, 153, 0.8)', 'rgba(56, 189, 248, 0.8)', 'rgba(251, 191, 36, 0.8)'], borderColor: '#0f172a', borderWidth: 2, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc', font: { size: 12, weight: 'bold' }, padding: 15 } }, tooltip: tooltipOpt }, cutout: '65%', layout: { padding: 10 } } });
+            }
+            if (document.getElementById('stockChart')) { charts.stock = new Chart(document.getElementById('stockChart').getContext('2d'), { type: 'bar', data: { labels: [], datasets: [{ label: '台股部位現值', data: [], backgroundColor: chartPalette, borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: tooltipOpt }, scales: { y: { display: false, grid: { display: false } }, x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11, weight: '600' } } } } } }); }
+            if (document.getElementById('fundChart')) { charts.fund = new Chart(document.getElementById('fundChart').getContext('2d'), { type: 'bar', data: { labels: [], datasets: [{ label: '海外與基金現值', data: [], backgroundColor: chartPalette.slice().reverse(), borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: tooltipOpt }, scales: { y: { display: false, grid: { display: false } }, x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11, weight: '600' } } } } } }); }
+            if (document.getElementById('historyChart')) { charts.history = new Chart(document.getElementById('historyChart').getContext('2d'), { type: 'line', data: { labels: [], datasets: [{ label: '結算淨資產', data: [], borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', fill: true, tension: 0.4, pointRadius: 3, pointBackgroundColor: '#fff', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { neonGlow: { blur: 15, enable: true }, tooltip: tooltipOpt, legend: { display: false } }, scales: { y: { display: false, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false, color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } } } } }); }
+        } catch(e) { console.error("圖表初始化失敗:", e); }
+    }
+
+    // 啟動引擎與載入歷史資料
+    window.onload = function() { 
+        loadData(); 
+        initCharts(); 
+        initSortableWidgets();
+        renderDetailsPage(); 
+        renderStocks(); 
+        renderFunds(); 
+        renderNotes();
+        renderSnapshots();
+        renderTacticsWidgets();
+        fetchUsdExchangeRate(); 
+        
+        setTimeout(() => {
+            updateTotals();
+            let ticker = document.getElementById('ui-ticker-text');
+            if (ticker) { ticker.innerText = "連線成功！全息戰情室已啟動... VIX 監控中..."; }
+            isAppReady = true;
+        }, 500);
+    };
+</script>
+</body>
+</html>
